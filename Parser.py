@@ -70,6 +70,8 @@ class Parser:
         while True:
             c = self.nextToken()
 
+            if c == None: break
+
             # print('input: {}\n\tstack: {}\n\toutput: {}'.format(c.body, stack, output))
 
             if c.kind == 'IDENT' and (c.body == 'true' or c.body == 'false'):
@@ -77,6 +79,10 @@ class Parser:
                 continue
 
             if c.kind != 'PUNCT' and c.kind != 'NUM' and c.kind != 'STRING':
+                self.putTokenBack()
+                break
+
+            if c.lineStart:
                 self.putTokenBack()
                 break
 
@@ -98,6 +104,7 @@ class Parser:
             if c == ')':
                 while stack[-1] != '(':
                     output.append(stack.pop())
+                stack.pop()
                 continue
 
             if c in constants:

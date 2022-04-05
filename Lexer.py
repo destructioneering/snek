@@ -2,10 +2,10 @@ import re
 from enum import Enum
 
 class Token:
-    def __init__(self, kind, body, lineEnd):
+    def __init__(self, kind, body, lineStart):
         self.kind = kind
         self.body = body
-        self.lineEnd = lineEnd
+        self.lineStart = lineStart
 
 class Lexer:
     def __init__(self, iostream):
@@ -13,7 +13,7 @@ class Lexer:
 
         self.words = [
             ['STRING', r'(?:\'.*?\'|".*?")', None],
-            ['PUNCT', r'[,:{}()+\-*/]', None],
+            ['PUNCT', r'[,:{}()+\-*/^]', None],
             ['NUM', r'\d+', None],
             ['IDENT', r'\w+', None]
         ]
@@ -65,11 +65,10 @@ class Lexer:
 
             if len(line) == 0: continue
 
-            lineTokens = self.splitLine(line)
-            for i, word in enumerate(lineTokens):
+            for i, word in enumerate(self.splitLine(line)):
                 tokens.append(self.interpretWord(word))
-                if i == len(lineTokens):
-                    tokens[-1].lineEnd = True
+                if i == 0:
+                    tokens[-1].lineStart = True
 
         self.tokens = tokens
 
