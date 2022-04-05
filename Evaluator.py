@@ -1,5 +1,6 @@
 from Statement import *
 from Expression import *
+from Value import *
 
 class Evaluator:
     def __init__(self):
@@ -18,14 +19,14 @@ class Evaluator:
 
     def evalExpression(self, scope, expression):
         if isinstance(expression, BooleanExpression):
-            return expression.boolean
+            return BooleanValue(expression.boolean)
         if isinstance(expression, StringExpression):
-            return expression.string
+            return StringValue(expression.string)
         if isinstance(expression, BinaryExpression):
-            return expression.function(self.evalExpression(scope, expression.left),
-                                       self.evalExpression(scope, expression.right))
+            return NumberValue(expression.function(self.evalExpression(scope, expression.left).number,
+                                                   self.evalExpression(scope, expression.right).number))
         if isinstance(expression, NumberExpression):
-            return expression.number
+            return NumberValue(expression.number)
         if isinstance(expression, IdentifierExpression):
             return self.getVariable(scope, expression.identifier)
 
@@ -34,7 +35,7 @@ class Evaluator:
             if self.evalExpression(scope, statement.condition):
                 self.evalStatement(scope.copy(), statement.body)
         elif isinstance(statement, PrintStatement):
-            print(f"{self.evalExpression(scope, statement.expression)}")
+            self.evalExpression(scope, statement.expression).print()
         elif isinstance(statement, ExpressionStatement):
             self.evalExpression(scope, statement.expression)
         elif isinstance(statement, AssignStatement):

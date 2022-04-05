@@ -1,6 +1,5 @@
 class Object:
-    def __init__(self):
-        pass
+    pass
 
 class Function(Object):
     def __init__(self, scope, parameters, body, evaluator):
