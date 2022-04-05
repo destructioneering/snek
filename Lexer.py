@@ -1,14 +1,6 @@
 import re
 from enum import Enum
 
-class TokenKind(Enum):
-    INDENT = 1
-    DEDENT = 2
-    IDENT = 3
-    PUNCT = 4
-    NUM = 5
-    STRING = 6
-
 class Token:
     def __init__(self, kind, body):
         self.kind = kind
@@ -19,10 +11,10 @@ class Lexer:
         self.iostream = iostream
 
         self.words = [
-            [TokenKind.STRING, r'(?:\'.*?\'|".*?")', None],
-            [TokenKind.PUNCT, r'[,:{}()+\-*/]', None],
-            [TokenKind.NUM, r'\d+', None],
-            [TokenKind.IDENT, r'\w+', None]
+            ['STRING', r'(?:\'.*?\'|".*?")', None],
+            ['PUNCT', r'[,:{}()+\-*/]', None],
+            ['NUM', r'\d+', None],
+            ['IDENT', r'\w+', None]
         ]
         for word in self.words:
             word[2] = re.compile(word[1])
@@ -61,12 +53,16 @@ class Lexer:
         for line in self.iostream:
             line = line.rstrip()
 
+            if len(line) > 0 and line[0] == '#': continue
+
             newIndentation = self.countIndentation(line)
             if newIndentation > oldIndentation:
-                tokens.append(Token(TokenKind.INDENT, ''))
+                tokens.append(Token('INDENT', ''))
             if newIndentation < oldIndentation:
-                tokens.append(Token(TokenKind.DEDENT, ''))
+                tokens.append(Token('DEDENT', ''))
             oldIndentation = newIndentation
+
+            if len(line) == 0: continue
 
             for word in self.splitLine(line):
                 tokens.append(self.interpretWord(word))
@@ -77,6 +73,6 @@ class Lexer:
         for token in self.tokens:
             print(f"{token.kind:<20} {token.body}")
 
-    def nextToken(self):
+    def getGenerator(self):
         for token in self.tokens:
             yield token

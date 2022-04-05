@@ -7,7 +7,7 @@ from Parser import Parser
 if __name__ == '__main__':
     lexer = Lexer(sys.stdin)
     lexer.tokenize()
-    lexer.dump()
-    for token in lexer.nextToken():
-        print(f'{token.body}')
+    # lexer.dump()
     parser = Parser(lexer)
+    parser.parse()
+    parser.dump()

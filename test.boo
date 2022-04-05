@@ -1,7 +1,7 @@
-function f(a, b):
-    print a + b
+#function f(a, b):
+#    print a + b
 
 if true:
     print 'Hello, world!'
 
-f(2, 2)
+#f(2, 2)
