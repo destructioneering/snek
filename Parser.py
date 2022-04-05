@@ -50,11 +50,12 @@ class Parser:
 
     def shuntingYard(self):
         operators = {
-            '^': (4, lambda a, b: a ** b, True),
-            '*': (3, lambda a, b: a * b, False),
-            '/': (3, lambda a, b: a / b, False),
-            '+': (2, lambda a, b: a + b, False),
-            '-': (2, lambda a, b: a - b, False),
+            # Each tuple is just (precedence, right associative?).
+            '^': (4, True),
+            '*': (3, False),
+            '/': (3, False),
+            '+': (2, False),
+            '-': (2, False),
             '(': (0,),
         }
 
@@ -79,6 +80,7 @@ class Parser:
                 self.putTokenBack()
                 break
 
+            # This should be the only PUNCT that can break an expression.
             if c.body == ':':
                 self.putTokenBack()
                 break
@@ -96,7 +98,6 @@ class Parser:
             if c == ')':
                 while stack[-1] != '(':
                     output.append(stack.pop())
-                    stack.pop()
                 continue
 
             if c in constants:
@@ -111,7 +112,7 @@ class Parser:
                 stack.append(c)
                 continue
 
-            while len(stack) > 0 and (operators[c][0] < operators[stack[-1]][0] or (operators[c][0] == operators[stack[-1]][0] and not operators[c][2])):
+            while len(stack) > 0 and (operators[c][0] < operators[stack[-1]][0] or (operators[c][0] == operators[stack[-1]][0] and not operators[c][1])):
                 output.append(stack.pop())
 
             stack.append(c)
@@ -138,7 +139,6 @@ class Parser:
             expression.addChild('left', a)
             expression.addChild('right', b)
             stack.append(expression)
-            # stack.append(operators[x][1](a, b))
 
         return stack[0]
 
