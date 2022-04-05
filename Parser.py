@@ -87,7 +87,7 @@ class Parser:
         self.expect(self.token().punct() == ':', 'Expected a `:`')
         self.expect(self.token().indent() != None, 'Expected an indent at start of function body')
         self.nextToken()
-        return FunctionStatement(identifier.ident(), parameters, self.parseStatement())
+        return FunctionStatement(identifier.ident(), parameters, self.parseStatementList())
 
     def parseExpressionStatement(self):
         self.putTokenBack()
@@ -108,7 +108,7 @@ class Parser:
         elif token.ident() == 'def':
             return self.parseFunction()
         elif token.dedent():
-            return self.parseStatement()
+            return None
         elif token.ident() != None: # Could be an assignment
             equalSign = self.nextToken()
 

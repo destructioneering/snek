@@ -23,6 +23,10 @@ class ExpressionParser:
             ('?', ':', 3, 'left',  'ternary', lambda a, b, c: b if a else c ),
         ]
 
+    def putTokenBack(self):
+        self.tokenIndex -= 1
+        return self.tokens[self.tokenIndex]
+
     def nextToken(self):
         if self.tokenIndex >= len(self.tokens): return None
         self.tokenIndex += 1
@@ -129,6 +133,7 @@ class ExpressionParser:
 
             left = expression
 
-            # if self.token().lineStart: break
+            if self.token().lineStart:
+                break
 
         return expression

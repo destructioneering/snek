@@ -16,7 +16,9 @@ class FunctionObject(Object):
             print('Incorrect number of arguments supplied to function')
         for i in range(len(arguments)):
             self.scope[self.parameters[i]] = arguments[i]
-        self.evaluator.evalStatement(self.scope, self.body)
+
+        for statement in self.body:
+            self.evaluator.evalStatement(self.scope, statement)
 
         # This should return something real in the future.
         return StringValue('it worked')
