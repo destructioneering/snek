@@ -12,6 +12,6 @@ if __name__ == '__main__':
     parser = Parser(lexer.tokens)
     parser.parse()
     parser.dump()
-    evaluator = Evaluator()
-    for statement in parser.statements:
-        evaluator.eval(statement)
+    # evaluator = Evaluator()
+    # for statement in parser.statements:
+    #     evaluator.eval(statement)

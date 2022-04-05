@@ -9,15 +9,9 @@ class Evaluator:
         print(f"Runtime error: {errorMessage}")
 
     def setVariable(self, scope, name, value):
-        """
-        Assign a variable in the current scope.
-        """
         scope[name] = value
 
     def getVariable(self, scope, name):
-        """
-        Look up a variable in the current scope.
-        """
         if name in scope: return scope[name]
         if name in self.globalScope: return self.globalScope[name]
         self.error(f"Undeclared variable {name}")

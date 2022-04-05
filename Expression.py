@@ -45,3 +45,8 @@ class MemberExpression(Expression):
         super().__init__(operator)
         self.left = left
         self.right = right
+
+class FunctionCallExpression(Expression):
+    def __init__(self, function, parameters):
+        self.function = function
+        self.parameters = parameters

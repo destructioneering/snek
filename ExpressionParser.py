@@ -24,7 +24,9 @@ class ExpressionParser:
         ]
 
     def nextToken(self):
+        if self.tokenIndex >= len(self.tokens): return None
         self.tokenIndex += 1
+        return self.tokens[self.tokenIndex - 1]
 
     def token(self):
         return self.tokens[self.tokenIndex] if self.tokenIndex < len(self.tokens) else Token('NONE', '', False)
@@ -40,6 +42,19 @@ class ExpressionParser:
             if self.token().punct() == operator[0] and (operator[4] == 'prefix' or operator[4] == 'group'):
                 return operator
         return None
+
+    def parseFunctionParameters(self):
+        if self.token().punct() == ')': return []
+        parameters = [self.parse()]
+
+        while True:
+            if self.token().punct() == ',':
+                self.nextToken()
+                parameters.append(self.parse())
+            else:
+                break
+
+        return parameters
 
     def getPrecedence(self, precedence):
         operator = self.getInfixOp()
@@ -89,11 +104,18 @@ class ExpressionParser:
                 expression = TernaryOperator(left, b, c, operator[5])
             elif operator[4] == 'member':
                 self.nextToken()
-                b = self.parse()
-                if self.token().punct() != operator[1]:
-                    print(f"Expression error: expected a {operator[1]} (got {self.token().punct()})")
-                self.nextToken()
-                expression = MemberExpression(operator[0], left, b)
+                if operator[0] == '(': # Function call
+                    parameters = self.parseFunctionParameters()
+                    if self.token().punct() != operator[1]:
+                        print(f"Expression error: expected a {operator[1]} (got {self.token().punct()})")
+                    self.nextToken()
+                    expression = FunctionCallExpression(left, parameters)
+                else:
+                    b = self.parse()
+                    if self.token().punct() != operator[1]:
+                        print(f"Expression error: expected a {operator[1]} (got {self.token().punct()})")
+                    self.nextToken()
+                    expression = MemberExpression(operator[0], left, b)
             elif operator[4] == 'binary':
                 self.nextToken()
                 b = self.parse(operator[2] if operator[3] == 'left' else operator[2] - 1)
