@@ -37,11 +37,21 @@ class Parser:
         self.tokenIndex += expressionParser.tokenIndex
         return node
 
+    def parseStatementList(self):
+        statements = []
+        while not self.token().dedent():
+            statement = self.parseStatement()
+            if statement == None: break
+            statements.append(statement)
+        return statements
+
     def parseIf(self):
         condition = self.parseExpression()
+        self.nextToken()
         self.expect(self.token().punct() == ':', 'Expected `:`')
         self.expect(self.token().indent() != None, 'Expected an indent')
-        body = self.parseStatement()
+        self.nextToken()
+        body = self.parseStatementList()
         self.expect(self.token().dedent() != None, 'Expected a dedent')
         return IfStatement(condition, body)
 

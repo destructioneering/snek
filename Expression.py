@@ -7,8 +7,7 @@ class IdentifierExpression(Expression):
         self.identifier = identifier
 
 class BooleanExpression(Expression):
-    def __init__(self, operator, boolean):
-        super().__init__(operator)
+    def __init__(self, boolean):
         self.boolean = boolean
 
 class StringExpression(Expression):

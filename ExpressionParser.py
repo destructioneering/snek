@@ -84,8 +84,12 @@ class ExpressionParser:
             elif self.token().string() != None:
                 left = StringExpression(self.token().string()[1:-1])
                 self.nextToken()
+            elif self.token().bool() != None:
+                left = BooleanExpression(self.token().bool())
+                self.nextToken()
             else:
                 print(f"Expression error: unrecognized primary ({self.token().body})")
+                abort()
 
         operator = self.getInfixOp()
         expression = left

@@ -39,8 +39,10 @@ class Evaluator:
 
     def evalStatement(self, scope, statement):
         if isinstance(statement, IfStatement):
-            if self.evalExpression(scope, statement.condition):
-                self.evalStatement(scope.copy(), statement.body)
+            if self.evalExpression(scope, statement.condition).boolean == True:
+                newscope = scope.copy()
+                for s in statement.body:
+                    self.evalStatement(newscope, s)
         elif isinstance(statement, PrintStatement):
             self.evalExpression(scope, statement.expression).print()
         elif isinstance(statement, ExpressionStatement):
@@ -51,6 +53,8 @@ class Evaluator:
             obj = FunctionObject(scope, statement.parameters, statement.body, self)
             functionValue = FunctionValue(self.garbageCollector.allocate(obj))
             self.setVariable(scope, statement.identifier, functionValue)
+        else:
+            print(f"Invalid statement {statement}")
 
     def eval(self, statement):
         self.evalStatement(self.globalScope, statement)
