@@ -9,11 +9,12 @@ class ExpressionParser:
         self.tokens = tokens
         self.tokenIndex = 0
         self.operators = [
-            ('(', ')', 7, 'left',  'member' ),
-            ('[', ']', 7, 'left',  'member' ),
-            ('+', 'n', 6, 'right', 'prefix', lambda a: a),
-            ('-', 'n', 6, 'right', 'prefix', lambda a: -a ),
-            ('(', ')', 6, 'left',  'group ' ),
+            ('(', ')', 8, 'left',  'member' ),
+            ('[', ']', 8, 'left',  'member' ),
+            ('+', 'n', 7, 'right', 'prefix', lambda a: a),
+            ('-', 'n', 7, 'right', 'prefix', lambda a: -a ),
+            ('(', ')', 7, 'left',  'group'  ),
+            ('^', 'n', 6, 'left',  'binary', lambda a, b: a ** b ),
             ('*', 'n', 5, 'left',  'binary', lambda a, b: a * b ),
             ('/', 'n', 5, 'left',  'binary', lambda a, b: a / b ),
             ('%', 'n', 5, 'left',  'binary', lambda a, b: a % b ),
@@ -50,11 +51,12 @@ class ExpressionParser:
 
         if operator:            # A prefix operator.
             if operator[4] == 'group':
-                leftleft = self.parse()
                 self.nextToken()
+                left = self.parse()
+                self.nextToken() # Skip over the )
             else:
                 leftleft = parse(operator[2])
-            left = UnaryExpression(leftleft, operator[5])
+                left = UnaryExpression(operator[0], leftleft, operator[5])
         else:
             # No prefix operator, just parse a primary.
             if self.token().ident() != None:
@@ -83,13 +85,13 @@ class ExpressionParser:
                 self.nextToken()
                 b = self.parse()
                 if self.token().punct() != operator[1]:
-                    print(f"Expression error: expected a {operator[1]}")
+                    print(f"Expression error: expected a {operator[1]} (got {self.token().punct()})")
                 self.nextToken()
-                expression = MemberExpression(left, b)
+                expression = MemberExpression(operator[0], left, b)
             elif operator[4] == 'binary':
                 self.nextToken()
                 b = self.parse(operator[2] if operator[3] == 'left' else operator[2] - 1)
-                expression = BinaryExpression(left, b, operator[5])
+                expression = BinaryExpression(operator[0], left, b, operator[5])
             elif operator[4] == 'postfix':
                 self.nextToken()
 
