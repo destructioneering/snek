@@ -139,10 +139,11 @@ class Parser:
                     stack.append(Expression('STRING', x.body))
                 elif x.kind == 'NUM':
                     stack.append(Expression('NUM', float(x.body)))
-                elif x.kind == 'BOOL':
-                    stack.append(Expression('BOOL', x.body == 'true'))
                 elif x.kind == 'IDENT':
-                    stack.append(Expression('IDENT', x.body))
+                    if x.body == 'True' or x.body == 'False':
+                        stack.append(Expression('BOOL', x.body == 'True'))
+                    else:
+                        stack.append(Expression('IDENT', x.body))
                 continue
 
             b = stack.pop()

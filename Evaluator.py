@@ -1,6 +1,5 @@
 class Evaluator:
-    def __init__(self, parser):
-        self.parser = parser
+    def __init__(self):
         self.mathOps = {
             '^': lambda a, b: a ** b,
             '*': lambda a, b: a * b,
@@ -53,6 +52,5 @@ class Evaluator:
                              statement.children['variable'],
                              self.evalExpression(scope, statement.children['expression']))
 
-    def eval(self):
-        for statement in self.parser.statements:
-            self.evalStatement(self.globalScope, statement)
+    def eval(self, statement):
+        self.evalStatement(self.globalScope, statement)

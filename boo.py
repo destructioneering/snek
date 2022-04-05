@@ -8,9 +8,10 @@ from Evaluator import Evaluator
 if __name__ == '__main__':
     lexer = Lexer(sys.stdin)
     lexer.tokenize()
-    lexer.dump()
+    # lexer.dump()
     parser = Parser(lexer)
     parser.parse()
-    #parser.dump()
-    evaluator = Evaluator(parser)
-    evaluator.eval()
+    parser.dump()
+    # evaluator = Evaluator()
+    # for statement in parser.statements:
+    #     evaluator.eval(statement)
