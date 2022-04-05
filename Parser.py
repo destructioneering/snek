@@ -31,6 +31,10 @@ class Parser:
 
     def putTokenBack(self):
         self.tokenIndex -= 1
+        return self.tokens[self.tokenIndex]
+
+    def getCurrentToken(self):
+        return self.tokens[self.tokenIndex - 1]
 
     def nextToken(self):
         if self.tokenIndex >= len(self.tokens): return None
@@ -38,7 +42,7 @@ class Parser:
         return self.tokens[self.tokenIndex - 1]
 
     def error(self, errorString):
-        print(f"Parse error: {errorString} / {self.nextToken().body}")
+        print(f"Parse error: {errorString}: ({self.getCurrentToken().body})")
 
     def expect(self, token, errorString):
         if self.nextToken().body != token:
@@ -46,6 +50,11 @@ class Parser:
 
     def expectKind(self, tokenKind, errorString):
         if self.nextToken().kind != tokenKind:
+            self.error(errorString)
+
+    def expectToken(self, tokenKind, tokenBody, errorString):
+        token = self.nextToken()
+        if token.kind != tokenKind or token.body != tokenBody:
             self.error(errorString)
 
     def shuntingYard(self):
@@ -169,6 +178,36 @@ class Parser:
         node.addChild('expression', expression)
         return node
 
+    def parseFunctionArgs(self):
+        token = self.nextToken()
+        if token.kind != 'IDENT': return []
+        args = [token.body]
+
+        while True:
+            token = self.nextToken()
+            if token.kind == 'PUNCT' and token.body == ',':
+                self.expectKind('IDENT', 'Expected an identifier in argument list')
+                token = self.getCurrentToken()
+                args.append(token.body)
+            else:
+                self.putTokenBack()
+                break
+
+        return args
+
+    def parseFunction(self):
+        node = Node('FUNCTION')
+        self.expectKind('IDENT', 'Expected an identifier')
+        identifier = self.getCurrentToken()
+        node.addChild('name', identifier.body)
+        self.expectToken('PUNCT', '(', 'Expected a `(`')
+        node.addChild('args', self.parseFunctionArgs())
+        self.expectToken('PUNCT', ')', 'Expected a `)`')
+        self.expectToken('PUNCT', ':', 'Expected a `:`')
+        self.expectKind('INDENT', 'Expected an indent at start of function body')
+        node.addChild('body', self.parseStatement())
+        return node
+
     def parseStatement(self):
         """
         Reads a statement from the token stream. Returns a `Node`.
@@ -181,6 +220,10 @@ class Parser:
             return self.parseIf()
         elif token.body == 'print':
             return self.parsePrint()
+        elif token.body == 'def':
+            return self.parseFunction()
+        elif token.kind == 'DEDENT':
+            return self.parseStatement()
 
         self.error('Expected a statement')
 
