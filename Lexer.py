@@ -20,7 +20,7 @@ class Lexer:
 
         self.words = [
             [TokenKind.STRING, r'(?:\'.*?\'|".*?")', None],
-            [TokenKind.PUNCT, r'[:{}()+\-*/]', None],
+            [TokenKind.PUNCT, r'[,:{}()+\-*/]', None],
             [TokenKind.NUM, r'\d+', None],
             [TokenKind.IDENT, r'\w+', None]
         ]
