@@ -6,6 +6,12 @@ y = (3+4*2/(1-5)^2^3)
 
 print x * y
 
+if true:
+    z = 2
+    print z
+
+print z
+
 #print (2+2)
 #print (((2+2)))
 #print 3+4*2/(1-5)^2^3
