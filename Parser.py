@@ -80,6 +80,7 @@ class Parser:
         return FunctionStatement(identifier.ident(), parameters, self.parseStatement())
 
     def parseExpressionStatement(self):
+        self.putTokenBack()
         return ExpressionStatement(self.parseExpression())
 
     def parseStatement(self):
