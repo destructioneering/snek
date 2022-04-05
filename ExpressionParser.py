@@ -27,7 +27,7 @@ class ExpressionParser:
         self.tokenIndex += 1
 
     def token(self):
-        return self.tokens[self.tokenIndex] if self.tokenIndex < len(self.tokens) else Token('NONE', '', 0)
+        return self.tokens[self.tokenIndex] if self.tokenIndex < len(self.tokens) else Token('NONE', '', False)
 
     def getInfixOp(self):
         for operator in self.operators:
@@ -55,7 +55,8 @@ class ExpressionParser:
                 left = self.parse()
                 self.nextToken() # Skip over the )
             else:
-                leftleft = parse(operator[2])
+                self.nextToken()
+                leftleft = self.parse(operator[2])
                 left = UnaryExpression(operator[0], leftleft, operator[5])
         else:
             # No prefix operator, just parse a primary.
@@ -65,6 +66,11 @@ class ExpressionParser:
             elif self.token().num() != None:
                 left = NumberExpression(self.token().num())
                 self.nextToken()
+            elif self.token().string() != None:
+                left = StringExpression(self.token().string()[1:-1])
+                self.nextToken()
+            else:
+                print(f"Expression error: unrecognized primary ({self.token().body})")
 
         operator = self.getInfixOp()
         expression = left
@@ -96,5 +102,7 @@ class ExpressionParser:
                 self.nextToken()
 
             left = expression
+
+            # if self.token().lineStart: break
 
         return expression

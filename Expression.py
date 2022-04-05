@@ -12,8 +12,7 @@ class BooleanExpression(Expression):
         self.boolean = boolean
 
 class StringExpression(Expression):
-    def __init__(self, operator, string):
-        super().__init__(operator)
+    def __init__(self, string):
         self.string = string
 
 class NumberExpression(Expression):

@@ -26,7 +26,7 @@ class Evaluator:
         if isinstance(expression, BooleanExpression):
             return expression.boolean
         if isinstance(expression, StringExpression):
-            return expression.string[1:-1]
+            return expression.string
         if isinstance(expression, BinaryExpression):
             return expression.function(self.evalExpression(scope, expression.left),
                                        self.evalExpression(scope, expression.right))

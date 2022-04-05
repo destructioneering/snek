@@ -32,7 +32,10 @@ class Parser:
             self.error(errorString)
 
     def parseExpression(self):
-        return ExpressionParser(self.tokens[self.tokenIndex:]).parse()
+        expressionParser = ExpressionParser(self.tokens[self.tokenIndex:])
+        node = expressionParser.parse()
+        self.tokenIndex += expressionParser.tokenIndex
+        return node
 
     def parseIf(self):
         condition = self.parseExpression()
@@ -73,7 +76,6 @@ class Parser:
         return FunctionStatement(identifier.ident(), parameters, self.parseStatement())
 
     def parseExpressionStatement(self):
-        self.putTokenBack()
         return ExpressionStatement(self.parseExpression())
 
     def parseStatement(self):
@@ -90,7 +92,7 @@ class Parser:
             return self.parsePrint()
         elif token.ident() == 'def':
             return self.parseFunction()
-        elif token.dedent() != None:
+        elif token.dedent():
             return self.parseStatement()
         elif token.ident() != None: # Could be an assignment
             equalSign = self.nextToken()
