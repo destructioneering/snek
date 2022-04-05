@@ -13,7 +13,7 @@ class Lexer:
 
         self.words = [
             ['STRING', r'(?:\'.*?\'|".*?")', None],
-            ['PUNCT', r'[,:{}()+\-*/^]', None],
+            ['PUNCT', r'[=,:{}()+\-*/^]', None],
             ['NUM', r'\d+', None],
             ['IDENT', r'\w+', None]
         ]

@@ -2,6 +2,12 @@ from enum import Enum
 import json
 import jsonpickle
 
+def punct(token, string):
+    return token.kind == 'PUNCT' and token.body == string
+
+def ident(token, string):
+    return token.kind == 'IDENT' and token.body == string
+
 class Expression:
     def __init__(self, kind, body):
         """
@@ -28,6 +34,10 @@ class Parser:
         self.lexer = lexer
         self.tokens = [token for token in lexer.getGenerator()]
         self.tokenIndex = 0
+        self.keywords = [
+            'if',
+            'def'
+        ]
 
     def putTokenBack(self):
         self.tokenIndex -= 1
@@ -68,69 +78,52 @@ class Parser:
             '(': (0,),
         }
 
-        constants = {
-            'pi': 3.1415926,
-            'π': 3.1415926,
-        }
-
         stack = []
         output = []
         tokensConsumed = 0
 
         while True:
             c = self.nextToken()
+            if c == None: break
             tokensConsumed += 1
 
-            if c == None: break
+            # print('input: {}\n\tstack: {}\n\toutput: {}'.format(c.body,
+            #                                                     [x.body for x in stack],
+            #                                                     [x.body for x in output]))
 
-            # print('input: {}\n\tstack: {}\n\toutput: {}'.format(c.body, stack, output))
-
-            if c.kind == 'IDENT' and (c.body == 'true' or c.body == 'false'):
-                stack.append(c.body == 'true')
-                continue
-
-            if c.kind != 'PUNCT' and c.kind != 'NUM' and c.kind != 'STRING':
-                self.putTokenBack()
-                break
-
+            # We should only see the end of the expression if we're at
+            # the beginning of a line and we've already consumed at
+            # least one token. I.e., we've ended up on the next line.
             if c.lineStart and tokensConsumed > 1:
                 self.putTokenBack()
                 break
 
-            # This should be the only PUNCT that can break an expression.
-            if c.body == ':':
+            if punct(c, ':') or (c.kind == 'IDENT' and c.body in self.keywords):
                 self.putTokenBack()
                 break
 
-            if c.kind == 'STRING':
-                stack.append(c.body)
+            if punct(c, '('):
+                stack.append(c)
                 continue
 
-            c = c.body
-
-            if c == '(':
-                stack.append('(')
-                continue
-
-            if c == ')':
-                while stack[-1] != '(':
+            if punct(c, ')'):
+                while not punct(stack[-1], '('):
                     output.append(stack.pop())
                 stack.pop()
                 continue
 
-            if c in constants:
-                output.append(constants[c])
-                continue
-
-            if c not in operators:
-                output.append(float(c))
+            if c.kind != 'PUNCT' or c.body not in operators:
+                output.append(c)
                 continue
 
             if len(stack) == 0:
                 stack.append(c)
                 continue
 
-            while len(stack) > 0 and (operators[c][0] < operators[stack[-1]][0] or (operators[c][0] == operators[stack[-1]][0] and not operators[c][1])):
+            while len(stack) > 0 \
+                  and (operators[c.body][0] < operators[stack[-1].body][0] \
+                       or (operators[c.body][0] == operators[stack[-1].body][0] \
+                           and not operators[c.body][1])):
                 output.append(stack.pop())
 
             stack.append(c)
@@ -141,19 +134,21 @@ class Parser:
         stack = []
 
         for x in output:
-            if x not in operators:
-                if type(x) is str:
-                    stack.append(Expression('STRING', x))
-                if type(x) is float:
-                    stack.append(Expression('NUM', x))
-                if type(x) is bool:
-                    stack.append(Expression('BOOL', 'true' if x else 'false'))
+            if x.kind != 'PUNCT':
+                if x.kind == 'STRING':
+                    stack.append(Expression('STRING', x.body))
+                elif x.kind == 'NUM':
+                    stack.append(Expression('NUM', float(x.body)))
+                elif x.kind == 'BOOL':
+                    stack.append(Expression('BOOL', x.body == 'true'))
+                elif x.kind == 'IDENT':
+                    stack.append(Expression('IDENT', x.body))
                 continue
 
             b = stack.pop()
             a = stack.pop()
 
-            expression = Expression('BINOP', x)
+            expression = Expression('BINOP', x.body)
             expression.addChild('left', a)
             expression.addChild('right', b)
             stack.append(expression)
@@ -210,6 +205,13 @@ class Parser:
         node.addChild('body', self.parseStatement())
         return node
 
+    def parseExpressionStatement(self):
+        self.putTokenBack()
+        expression = self.parseExpression()
+        node = Node('EXPR')
+        node.addChild('expression', expression)
+        return node
+
     def parseStatement(self):
         """
         Reads a statement from the token stream. Returns a `Node`.
@@ -226,12 +228,20 @@ class Parser:
             return self.parseFunction()
         elif token.kind == 'DEDENT':
             return self.parseStatement()
+        elif token.kind == 'IDENT':
+            equalSign = self.nextToken()
+
+            # Check to see if this is a variable assignment
+            if equalSign.kind == 'PUNCT' and equalSign.body == '=':
+                expression = self.parseExpression()
+                node = Node('ASSIGN')
+                node.addChild('variable', token.body)
+                node.addChild('expression', expression)
+                return node
+            else:
+                return self.parseExpressionStatement()
         else:
-            self.putTokenBack()
-            expression = self.parseExpression()
-            node = Node('EXPR')
-            node.addChild('expression', expression)
-            return node
+            return self.parseExpressionStatement()
 
         self.error('Expected a statement')
 
