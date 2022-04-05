@@ -14,7 +14,7 @@ class ExpressionParser:
             ('+', 'n', 7, 'right', 'prefix', lambda a: a),
             ('-', 'n', 7, 'right', 'prefix', lambda a: -a ),
             ('(', ')', 7, 'left',  'group'  ),
-            ('^', 'n', 6, 'left',  'binary', lambda a, b: a ** b ),
+            ('**', 'n', 6, 'left',  'binary', lambda a, b: a ** b ),
             ('*', 'n', 5, 'left',  'binary', lambda a, b: a * b ),
             ('/', 'n', 5, 'left',  'binary', lambda a, b: a / b ),
             ('%', 'n', 5, 'left',  'binary', lambda a, b: a % b ),
