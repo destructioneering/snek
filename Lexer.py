@@ -2,9 +2,10 @@ import re
 from enum import Enum
 
 class Token:
-    def __init__(self, kind, body):
+    def __init__(self, kind, body, lineEnd):
         self.kind = kind
         self.body = body
+        self.lineEnd = lineEnd
 
 class Lexer:
     def __init__(self, iostream):
@@ -44,7 +45,7 @@ class Lexer:
     def interpretWord(self, word):
         for w in self.words:
             if w[2].match(word):
-                return Token(w[0], word)
+                return Token(w[0], word, False)
 
     def tokenize(self):
         oldIndentation = 0
@@ -57,15 +58,18 @@ class Lexer:
 
             newIndentation = self.countIndentation(line)
             if newIndentation > oldIndentation:
-                tokens.append(Token('INDENT', ''))
+                tokens.append(Token('INDENT', '', True))
             if newIndentation < oldIndentation:
-                tokens.append(Token('DEDENT', ''))
+                tokens.append(Token('DEDENT', '', True))
             oldIndentation = newIndentation
 
             if len(line) == 0: continue
 
-            for word in self.splitLine(line):
+            lineTokens = self.splitLine(line)
+            for i, word in enumerate(lineTokens):
                 tokens.append(self.interpretWord(word))
+                if i == len(lineTokens):
+                    tokens[-1].lineEnd = True
 
         self.tokens = tokens
 
