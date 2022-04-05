@@ -25,7 +25,7 @@ class Parser:
         return self.tokens[self.tokenIndex - 1]
 
     def error(self, errorString):
-        print(f"Parse error: {errorString}: ({self.getCurrentToken().body})")
+        print(f"Parse error: {errorString}: ({self.token().body})")
 
     def expect(self, condition, errorString):
         if not condition:
@@ -56,23 +56,27 @@ class Parser:
         while True:
             token = self.nextToken()
             if token.punct() == ',':
+                token = self.nextToken()
                 self.expect(token.ident() != None, 'Expected an identifier in argument list')
-                token = self.token()
                 parameters.append(token.ident())
             else:
-                self.putTokenBack()
                 break
 
         return parameters
 
     def parseFunction(self):
         self.expect(self.token().ident() != None, 'Expected an identifier')
-        identifier = self.getCurrentToken()
-        self.expect(self.token().ident() != '(', 'Expected a `(`')
+        self.nextToken()
+        self.expect(self.token().ident() != None, 'Expected an identifier')
+        identifier = self.token()
+        self.nextToken()
+        self.expect(self.token().punct() == '(', 'Expected a `(`')
         parameters = self.parseFunctionParameters()
-        self.expect(self.token().ident() != ')', 'Expected a `)`')
-        self.expect(self.token().ident() != ':', 'Expected a `:`')
+        self.expect(self.token().punct() == ')', 'Expected a `)`')
+        self.nextToken()
+        self.expect(self.token().punct() == ':', 'Expected a `:`')
         self.expect(self.token().indent() != None, 'Expected an indent at start of function body')
+        self.nextToken()
         return FunctionStatement(identifier.ident(), parameters, self.parseStatement())
 
     def parseExpressionStatement(self):
