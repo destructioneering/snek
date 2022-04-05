@@ -1,11 +1,7 @@
 import re
 from enum import Enum
 
-class Token:
-    def __init__(self, kind, body, lineStart):
-        self.kind = kind
-        self.body = body
-        self.lineStart = lineStart
+from Token import Token
 
 class Lexer:
     def __init__(self, iostream):
@@ -75,7 +71,3 @@ class Lexer:
     def dump(self):
         for token in self.tokens:
             print(f"{token.kind:<20} {token.body}")
-
-    def getGenerator(self):
-        for token in self.tokens:
-            yield token

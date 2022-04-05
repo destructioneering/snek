@@ -1,12 +1,8 @@
+from Statement import *
+from Expression import *
+
 class Evaluator:
     def __init__(self):
-        self.mathOps = {
-            '^': lambda a, b: a ** b,
-            '*': lambda a, b: a * b,
-            '/': lambda a, b: a / b,
-            '+': lambda a, b: a + b,
-            '-': lambda a, b: a - b,
-            }
         self.globalScope = {}
 
     def error(self, errorMessage):
@@ -27,30 +23,28 @@ class Evaluator:
         self.error(f"Undeclared variable {name}")
 
     def evalExpression(self, scope, expression):
-        if expression.kind == 'BOOL':
-            return expression.body == 'true'
-        if expression.kind == 'STRING':
-            return expression.body[1:-1]
-        if expression.kind == 'BINOP':
-            return self.mathOps[expression.body](self.evalExpression(scope, expression.children['left']),
-                                                 self.evalExpression(scope, expression.children['right']))
-        if expression.kind == 'NUM':
-            return expression.body
-        if expression.kind == 'IDENT':
-            return self.getVariable(scope, expression.body)
+        if isinstance(expression, BooleanExpression):
+            return expression.boolean
+        if isinstance(expression, StringExpression):
+            return expression.string[1:-1]
+        if isinstance(expression, BinaryExpression):
+            return expression.function(self.evalExpression(scope, expression.left),
+                                       self.evalExpression(scope, expression.right))
+        if isinstance(expression, NumberExpression):
+            return expression.number
+        if isinstance(expression, IdentifierExpression):
+            return self.getVariable(scope, expression.identifier)
 
     def evalStatement(self, scope, statement):
-        if statement.kind == 'IF':
-            if self.evalExpression(scope, statement.children['condition']):
-                self.evalStatement(scope.copy(), statement.children['body'])
-        elif statement.kind == 'PRINT':
-            print(f"{self.evalExpression(scope, statement.children['expression'])}")
-        elif statement.kind == 'EXPR':
-            self.evalExpression(scope, statement.children['expression'])
-        elif statement.kind == 'ASSIGN':
-            self.setVariable(scope,
-                             statement.children['variable'],
-                             self.evalExpression(scope, statement.children['expression']))
+        if isinstance(statement, IfStatement):
+            if self.evalExpression(scope, statement.condition):
+                self.evalStatement(scope.copy(), statement.body)
+        elif isinstance(statement, PrintStatement):
+            print(f"{self.evalExpression(scope, statement.expression)}")
+        elif isinstance(statement, ExpressionStatement):
+            self.evalExpression(scope, statement.expression)
+        elif isinstance(statement, AssignStatement):
+            self.setVariable(scope, statement.identifier, self.evalExpression(scope, statement.expression))
 
     def eval(self, statement):
         self.evalStatement(self.globalScope, statement)
