@@ -26,10 +26,16 @@ class Node:
 class Parser:
     def __init__(self, lexer):
         self.lexer = lexer
-        self.tokenGenerator = lexer.getGenerator()
+        self.tokens = [token for token in lexer.getGenerator()]
+        self.tokenIndex = 0
+
+    def putTokenBack(self):
+        self.tokenIndex -= 1
 
     def nextToken(self):
-        return next(self.tokenGenerator, None)
+        if self.tokenIndex >= len(self.tokens): return None
+        self.tokenIndex += 1
+        return self.tokens[self.tokenIndex - 1]
 
     def error(self, errorString):
         print(f"Parse error: {errorString} / {self.nextToken().body}")
