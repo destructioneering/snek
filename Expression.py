@@ -47,6 +47,6 @@ class MemberExpression(Expression):
         self.right = right
 
 class FunctionCallExpression(Expression):
-    def __init__(self, function, parameters):
-        self.function = function
+    def __init__(self, identifier, parameters):
+        self.identifier = identifier
         self.parameters = parameters

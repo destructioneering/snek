@@ -21,3 +21,7 @@ class BooleanValue(Value):
 
     def print(self):
         print(self.boolean)
+
+class FunctionValue(Value):
+    def __init__(self, gcReference):
+        self.gcReference = gcReference
