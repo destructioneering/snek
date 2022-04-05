@@ -4,6 +4,9 @@ class Token:
         self.body = body
         self.lineStart = lineStart
 
+    def print(self):
+        return f"{self.kind}:{self.body}"
+
     def punct(self):
         return self.body if self.kind == 'PUNCT' else None
 

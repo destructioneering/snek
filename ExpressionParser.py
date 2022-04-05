@@ -92,7 +92,7 @@ class ExpressionParser:
                 left = BooleanExpression(self.token().bool())
                 self.nextToken()
             else:
-                print(f"Expression error: unrecognized primary ({self.token().body})")
+                print(f"Expression error: unrecognized primary ({self.token().print()})")
                 abort()
 
         operator = self.getInfixOp()

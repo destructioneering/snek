@@ -7,6 +7,9 @@ from Expression import *
 from ExpressionParser import ExpressionParser
 from Token import Token
 
+class DedentException(Exception):
+    pass
+
 class Parser:
     def __init__(self, tokens):
         self.tokens = tokens
@@ -17,12 +20,12 @@ class Parser:
         return self.tokens[self.tokenIndex]
 
     def token(self):
-        return self.tokens[self.tokenIndex - 1]
+        return self.tokens[self.tokenIndex] if self.tokenIndex < len(self.tokens) else None
 
     def nextToken(self):
         if self.tokenIndex >= len(self.tokens): return None
         self.tokenIndex += 1
-        return self.tokens[self.tokenIndex - 1]
+        return self.tokens[self.tokenIndex]
 
     def error(self, errorString):
         print(f"Parse error: {errorString}: ({self.token().body})")
@@ -40,12 +43,15 @@ class Parser:
     def parseStatementList(self):
         statements = []
         while not self.token().dedent():
-            statement = self.parseStatement()
-            if statement == None: break
+            try:
+                statement = self.parseStatement()
+            except DedentException:
+                break
             statements.append(statement)
         return statements
 
     def parseIf(self):
+        self.nextToken()
         condition = self.parseExpression()
         self.nextToken()
         self.expect(self.token().punct() == ':', 'Expected `:`')
@@ -56,6 +62,7 @@ class Parser:
         return IfStatement(condition, body)
 
     def parsePrint(self):
+        self.nextToken()
         return PrintStatement(self.parseExpression())
 
     def parseFunctionParameters(self):
@@ -75,7 +82,6 @@ class Parser:
         return parameters
 
     def parseFunction(self):
-        self.expect(self.token().ident() != None, 'Expected an identifier')
         self.nextToken()
         self.expect(self.token().ident() != None, 'Expected an identifier')
         identifier = self.token()
@@ -85,19 +91,21 @@ class Parser:
         self.expect(self.token().punct() == ')', 'Expected a `)`')
         self.nextToken()
         self.expect(self.token().punct() == ':', 'Expected a `:`')
+        self.nextToken()
         self.expect(self.token().indent() != None, 'Expected an indent at start of function body')
         self.nextToken()
-        return FunctionStatement(identifier.ident(), parameters, self.parseStatementList())
+        body = self.parseStatementList()
+        self.nextToken()
+        return FunctionStatement(identifier.ident(), parameters, body)
 
     def parseExpressionStatement(self):
-        self.putTokenBack()
         return ExpressionStatement(self.parseExpression())
 
     def parseStatement(self):
         """
         Reads a statement from the token stream. Returns a `Node`.
         """
-        token = self.nextToken()
+        token = self.token()
 
         if token == None: return None
 
@@ -108,12 +116,13 @@ class Parser:
         elif token.ident() == 'def':
             return self.parseFunction()
         elif token.dedent():
-            return None
+            raise DedentException()
         elif token.ident() != None: # Could be an assignment
             equalSign = self.nextToken()
 
             # Check to see if this is a variable assignment
             if equalSign.punct() == '=':
+                self.nextToken()
                 return AssignStatement(token.ident(), self.parseExpression())
             else:
                 self.putTokenBack()
@@ -136,6 +145,9 @@ class Parser:
         self.statements = []
 
         while True:
-            statement = self.parseStatement()
+            try:
+                statement = self.parseStatement()
+            except DedentException:
+                continue
             if statement == None: break
             self.statements.append(statement)
