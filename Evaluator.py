@@ -26,6 +26,8 @@ class Evaluator:
                 self.evalStatement(statement.children['body'])
         elif statement.kind == 'PRINT':
             print(f"{self.evalExpression(statement.children['expression'])}")
+        elif statement.kind == 'EXPR':
+            self.evalExpression(statement.children['expression'])
 
     def eval(self):
         for statement in self.parser.statements:

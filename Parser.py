@@ -75,9 +75,11 @@ class Parser:
 
         stack = []
         output = []
+        tokensConsumed = 0
 
         while True:
             c = self.nextToken()
+            tokensConsumed += 1
 
             if c == None: break
 
@@ -91,7 +93,7 @@ class Parser:
                 self.putTokenBack()
                 break
 
-            if c.lineStart:
+            if c.lineStart and tokensConsumed > 1:
                 self.putTokenBack()
                 break
 
@@ -224,6 +226,12 @@ class Parser:
             return self.parseFunction()
         elif token.kind == 'DEDENT':
             return self.parseStatement()
+        else:
+            self.putTokenBack()
+            expression = self.parseExpression()
+            node = Node('EXPR')
+            node.addChild('expression', expression)
+            return node
 
         self.error('Expected a statement')
 
