@@ -48,13 +48,102 @@ class Parser:
         if self.nextToken().kind != tokenKind:
             self.error(errorString)
 
+    def shuntingYard(self):
+        operators = {
+            '^': (4, lambda a, b: a ** b, True),
+            '*': (3, lambda a, b: a * b, False),
+            '/': (3, lambda a, b: a / b, False),
+            '+': (2, lambda a, b: a + b, False),
+            '-': (2, lambda a, b: a - b, False),
+            '(': (0,),
+        }
+
+        constants = {
+            'pi': 3.1415926,
+            'π': 3.1415926,
+        }
+
+        stack = []
+        output = []
+
+        while True:
+            c = self.nextToken()
+
+            # print('input: {}\n\tstack: {}\n\toutput: {}'.format(c.body, stack, output))
+
+            if c.kind == 'IDENT' and (c.body == 'true' or c.body == 'false'):
+                stack.append(c.body == 'true')
+                continue
+
+            if c.kind != 'PUNCT' and c.kind != 'NUM' and c.kind != 'STRING':
+                self.putTokenBack()
+                break
+
+            if c.body == ':':
+                self.putTokenBack()
+                break
+
+            if c.kind == 'STRING':
+                stack.append(c.body)
+                continue
+
+            c = c.body
+
+            if c == '(':
+                stack.append('(')
+                continue
+
+            if c == ')':
+                while stack[-1] != '(':
+                    output.append(stack.pop())
+                    stack.pop()
+                continue
+
+            if c in constants:
+                output.append(constants[c])
+                continue
+
+            if c not in operators:
+                output.append(float(c))
+                continue
+
+            if len(stack) == 0:
+                stack.append(c)
+                continue
+
+            while len(stack) > 0 and (operators[c][0] < operators[stack[-1]][0] or (operators[c][0] == operators[stack[-1]][0] and not operators[c][2])):
+                output.append(stack.pop())
+
+            stack.append(c)
+
+        for c in reversed(stack):
+            output.append(c)
+
+        stack = []
+
+        for x in output:
+            if x not in operators:
+                if type(x) is str:
+                    stack.append(Expression('STRING', x))
+                if type(x) is float:
+                    stack.append(Expression('NUM', x))
+                if type(x) is bool:
+                    stack.append(Expression('BOOL', 'true' if x else 'false'))
+                continue
+
+            b = stack.pop()
+            a = stack.pop()
+
+            expression = Expression('BINOP', x)
+            expression.addChild('left', a)
+            expression.addChild('right', b)
+            stack.append(expression)
+            # stack.append(operators[x][1](a, b))
+
+        return stack[0]
+
     def parseExpression(self):
-        token = self.nextToken()
-        if token.kind == 'IDENT' and (token.body == 'true' or token.body == 'false'):
-            return Expression('BOOL', token.body)
-        if token.kind == 'STRING':
-            return Expression('STRING', token.body)
-        self.error('Unsupported expression')
+        return self.shuntingYard()
 
     def parseIf(self):
         condition = self.parseExpression()
