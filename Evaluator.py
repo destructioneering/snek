@@ -17,20 +17,15 @@ class Evaluator:
         """
         Assign a variable in the current scope.
         """
-        if scopes == None:
+        if len(scopes) == 0:
             self.globalScope[name] = value
             return
-        if len(scopes) == 0:
-            scopes.append({})
         scopes[-1][name] = value
 
     def getVariable(self, scopes, name):
         """
         Look up a variable in the current scope.
         """
-        if scopes == None:
-            if name in self.globalScope:
-                return self.globalScope[name]
         for scope in reversed(scopes):
             if name in scope:
                 return scope[name]
@@ -65,5 +60,6 @@ class Evaluator:
                              self.evalExpression(scopes, statement.children['expression']))
 
     def eval(self):
+        blankScope = []
         for statement in self.parser.statements:
-            self.evalStatement(None, statement)
+            self.evalStatement(blankScope, statement)
