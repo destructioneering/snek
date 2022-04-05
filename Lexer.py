@@ -76,3 +76,7 @@ class Lexer:
     def dump(self):
         for token in self.tokens:
             print(f"{token.kind:<20} {token.body}")
+
+    def nextToken(self):
+        for token in self.tokens:
+            yield token
