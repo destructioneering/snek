@@ -44,7 +44,7 @@ class Parser:
 
     def parseExpression(self):
         token = self.nextToken()
-        if token.kind == 'IDENT' and token.body == 'true':
+        if token.kind == 'IDENT' and (token.body == 'true' or token.body == 'false'):
             return Expression('BOOL', token.body)
         if token.kind == 'STRING':
             return Expression('STRING', token.body)
