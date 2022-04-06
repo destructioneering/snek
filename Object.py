@@ -1,4 +1,5 @@
 from Value import *
+from Scope import Scope
 
 class Object:
     def __init__(self, id):
@@ -14,11 +15,12 @@ class FunctionObject(Object):
     def apply(self, arguments):
         if len(self.parameters) != len(arguments):
             print('Incorrect number of arguments supplied to function')
+        newscope = Scope(self.scope)
         for i in range(len(arguments)):
-            self.scope.setVariable(self.parameters[i], arguments[i])
+            newscope.setVariable(self.parameters[i], arguments[i])
 
         for statement in self.body:
-            self.evaluator.evalStatement(self.scope, statement)
+            self.evaluator.evalStatement(newscope, statement)
 
         # This should return something real in the future.
         return StringValue('it worked')
