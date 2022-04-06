@@ -97,9 +97,10 @@ class Parser:
         self.nextToken()
         self.expect(self.token().punct() == ':', 'Expected a `:`')
         self.nextToken()
-        self.expect(self.token().indent() != None, 'Expected an indent at start of function body')
+        self.expect(self.token().indent(), 'Expected an indent at start of function body')
         self.nextToken()
         body = self.parseStatementList()
+        self.expect(self.token().dedent(), 'Expected a dedent at end of function body')
         self.nextToken()
         return FunctionStatement(identifier.ident(), parameters, body)
 

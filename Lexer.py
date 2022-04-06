@@ -9,7 +9,7 @@ class Lexer:
 
         self.words = [
             ['STRING', r'(?:\'.*?\'|".*?")', None],
-            ['PUNCT', r'(?:>=|<=|!=|==|\*\*|[<>=,:{}()+\-*/^])', None],
+            ['PUNCT', r'(?:>=|<=|!=|==|\*\*|[%<>=,:{}()+\-*/^])', None],
             ['NUM', r'\d+', None],
             ['IDENT', r'\w+', None]
         ]
@@ -31,7 +31,7 @@ class Lexer:
         indent_regex = re.compile(r'^\s+')
         results = re.findall(indent_regex, line)
         if len(results) > 0:
-            return len(results[0])
+            return int(len(results[0]) / 4)
         else:
             return 0
 
@@ -53,10 +53,11 @@ class Lexer:
             if len(line) > 0 and line[0] == '#': continue
 
             newIndentation = self.countIndentation(line)
-            if newIndentation > oldIndentation:
-                tokens.append(Token('INDENT', '', True))
-            if newIndentation < oldIndentation:
-                tokens.append(Token('DEDENT', '', True))
+            for i in range(abs(newIndentation - oldIndentation)):
+                if newIndentation > oldIndentation:
+                    tokens.append(Token('INDENT', '', True))
+                if newIndentation < oldIndentation:
+                    tokens.append(Token('DEDENT', '', True))
             oldIndentation = newIndentation
 
             if len(line) == 0: continue
@@ -69,6 +70,7 @@ class Lexer:
         while oldIndentation > 0:
             tokens.append(Token('DEDENT', '', True))
             oldIndentation -= 1
+
         self.tokens = tokens
 
     def dump(self):
