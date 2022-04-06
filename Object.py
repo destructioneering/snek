@@ -1,5 +1,6 @@
 from Value import *
 from Scope import Scope
+from ReturnException import ReturnException
 
 class Object:
     def __init__(self, id):
@@ -20,7 +21,10 @@ class FunctionObject(Object):
             newscope.setVariable(self.parameters[i], arguments[i])
 
         for statement in self.body:
-            self.evaluator.evalStatement(newscope, statement)
+            try:
+                self.evaluator.evalStatement(newscope, statement)
+            except ReturnException as e:
+                return e.value
 
         return NoneValue()
 

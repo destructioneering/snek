@@ -10,6 +10,10 @@ class PrintStatement(Statement):
     def __init__(self, expression):
         self.expression = expression
 
+class ReturnStatement(Statement):
+    def __init__(self, expression):
+        self.expression = expression
+
 class ExpressionStatement(Statement):
     def __init__(self, expression):
         self.expression = expression

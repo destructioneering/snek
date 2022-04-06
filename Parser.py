@@ -23,8 +23,8 @@ class Parser:
         return self.tokens[self.tokenIndex] if self.tokenIndex < len(self.tokens) else None
 
     def nextToken(self):
-        if self.tokenIndex >= len(self.tokens): return None
         self.tokenIndex += 1
+        if self.tokenIndex >= len(self.tokens): return None
         return self.tokens[self.tokenIndex]
 
     def error(self, errorString):
@@ -65,6 +65,10 @@ class Parser:
     def parsePrint(self):
         self.nextToken()
         return PrintStatement(self.parseExpression())
+
+    def parseReturn(self):
+        self.nextToken()
+        return ReturnStatement(self.parseExpression())
 
     def parseFunctionParameters(self):
         token = self.nextToken()
@@ -116,6 +120,8 @@ class Parser:
             return self.parsePrint()
         elif token.ident() == 'def':
             return self.parseFunction()
+        elif token.ident() == 'return':
+            return self.parseReturn()
         elif token.dedent():
             raise DedentException()
         elif token.ident() != None: # Could be an assignment

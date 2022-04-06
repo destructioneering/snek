@@ -4,6 +4,7 @@ from Value import *
 from Object import *
 from Garbage import GarbageCollector
 from Scope import Scope
+from ReturnException import ReturnException
 
 class Evaluator:
     def __init__(self):
@@ -24,8 +25,8 @@ class Evaluator:
             if expression.operator == '!=':
                 return BooleanValue(not self.evalExpression(scope, expression.left).compareTo(self.evalExpression(scope, expression.right)))
             else:
-                return NumberValue(expression.function(self.evalExpression(scope, expression.left).number,
-                                                       self.evalExpression(scope, expression.right).number))
+                return expression.function(self.evalExpression(scope, expression.left),
+                                           self.evalExpression(scope, expression.right))
         elif isinstance(expression, NumberExpression):
             return NumberValue(expression.number)
         elif isinstance(expression, IdentifierExpression):
@@ -51,6 +52,8 @@ class Evaluator:
                     self.evalStatement(newscope, s)
         elif isinstance(statement, PrintStatement):
             self.evalExpression(scope, statement.expression).print()
+        elif isinstance(statement, ReturnStatement):
+            raise ReturnException(self.evalExpression(scope, statement.expression))
         elif isinstance(statement, ExpressionStatement):
             self.evalExpression(scope, statement.expression)
         elif isinstance(statement, AssignStatement):
