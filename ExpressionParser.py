@@ -23,6 +23,10 @@ class ExpressionParser:
             ('?', ':', 3, 'left',  'ternary', lambda a, b, c: b if a else c ),
         ]
 
+    def expect(self, condition, errorString):
+        if not condition:
+            self.error(errorString)
+
     def putTokenBack(self):
         self.tokenIndex -= 1
         return self.tokens[self.tokenIndex]
@@ -80,8 +84,19 @@ class ExpressionParser:
         else:
             # No prefix operator, just parse a primary.
             if self.token().ident() != None:
-                left = IdentifierExpression(self.token().ident())
-                self.nextToken()
+                if self.token().ident() == 'None':
+                    left = NoneExpression('None')
+                    self.nextToken()
+                elif self.token().ident() == 'lambda':
+                    self.nextToken()
+                    parameters = [x.identifier for x in self.parseFunctionParameters()]
+                    self.expect(self.token().punct() == ':', 'Expected a `:`')
+                    self.nextToken()
+                    body = self.parse()
+                    left = LambdaExpression(parameters, body)
+                else:
+                    left = IdentifierExpression(self.token().ident())
+                    self.nextToken()
             elif self.token().num() != None:
                 left = NumberExpression(self.token().num())
                 self.nextToken()

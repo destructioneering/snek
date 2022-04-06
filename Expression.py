@@ -49,3 +49,11 @@ class FunctionCallExpression(Expression):
     def __init__(self, identifier, parameters):
         self.identifier = identifier
         self.parameters = parameters
+
+class LambdaExpression(Expression):
+    def __init__(self, parameters, body):
+        self.parameters = parameters
+        self.body = body
+
+class NoneExpression(Expression):
+    pass

@@ -25,3 +25,11 @@ class BooleanValue(Value):
 class FunctionValue(Value):
     def __init__(self, gcReference):
         self.gcReference = gcReference
+
+class LambdaValue(Value):
+    def __init__(self, gcReference):
+        self.gcReference = gcReference
+
+class NoneValue(Value):
+    def print(self):
+        print('None')

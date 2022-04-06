@@ -29,6 +29,14 @@ class Evaluator:
             function = scope.getVariable(expression.identifier.identifier)
             arguments = [self.evalExpression(scope, x) for x in expression.parameters]
             return self.garbageCollector.getObject(function.gcReference).apply(arguments)
+        elif isinstance(expression, LambdaExpression):
+            obj = LambdaObject(scope, expression.parameters, expression.body, self)
+            lambdaValue = LambdaValue(self.garbageCollector.allocate(obj))
+            return lambdaValue
+        elif isinstance(expression, NoneExpression):
+            return NoneValue()
+        else:
+            print(f"Invalid expression {expression}")
 
     def evalStatement(self, scope, statement):
         if isinstance(statement, IfStatement):
