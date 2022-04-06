@@ -149,6 +149,6 @@ class Parser:
             try:
                 statement = self.parseStatement()
             except DedentException:
-                continue
+                break
             if statement == None: break
             self.statements.append(statement)

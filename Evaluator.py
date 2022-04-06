@@ -19,8 +19,13 @@ class Evaluator:
         elif isinstance(expression, StringExpression):
             return StringValue(expression.string)
         elif isinstance(expression, BinaryExpression):
-            return NumberValue(expression.function(self.evalExpression(scope, expression.left).number,
-                                                   self.evalExpression(scope, expression.right).number))
+            if expression.operator == '==':
+                return BooleanValue(self.evalExpression(scope, expression.left).compareTo(self.evalExpression(scope, expression.right)))
+            if expression.operator == '!=':
+                return BooleanValue(not self.evalExpression(scope, expression.left).compareTo(self.evalExpression(scope, expression.right)))
+            else:
+                return NumberValue(expression.function(self.evalExpression(scope, expression.left).number,
+                                                       self.evalExpression(scope, expression.right).number))
         elif isinstance(expression, NumberExpression):
             return NumberValue(expression.number)
         elif isinstance(expression, IdentifierExpression):

@@ -9,7 +9,7 @@ class Lexer:
 
         self.words = [
             ['STRING', r'(?:\'.*?\'|".*?")', None],
-            ['PUNCT', r'(?:\*\*|[=,:{}()+\-*/^])', None],
+            ['PUNCT', r'(?:!=|==|\*\*|[=,:{}()+\-*/^])', None],
             ['NUM', r'\d+', None],
             ['IDENT', r'\w+', None]
         ]
@@ -66,6 +66,9 @@ class Lexer:
                 if i == 0:
                     tokens[-1].lineStart = True
 
+        while oldIndentation > 0:
+            tokens.append(Token('DEDENT', '', True))
+            oldIndentation -= 1
         self.tokens = tokens
 
     def dump(self):

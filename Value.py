@@ -8,6 +8,10 @@ class StringValue(Value):
     def print(self):
         print(self.string)
 
+    def compareTo(self, value):
+        if not isinstance(value, StringValue): return False
+        return self.string == value.string
+
 class NumberValue(Value):
     def __init__(self, number):
         self.number = number
@@ -15,12 +19,20 @@ class NumberValue(Value):
     def print(self):
         print(self.number)
 
+    def compareTo(self, value):
+        if not isinstance(value, NumberValue): return False
+        return self.number == value.number
+
 class BooleanValue(Value):
     def __init__(self, boolean):
         self.boolean = boolean
 
     def print(self):
         print(self.boolean)
+
+    def compareTo(self, value):
+        if not isinstance(value, BooleanValue): return False
+        return self.boolean == value.boolean
 
 class FunctionValue(Value):
     def __init__(self, gcReference):
@@ -33,3 +45,6 @@ class LambdaValue(Value):
 class NoneValue(Value):
     def print(self):
         print('None')
+
+    def compareTo(self, value):
+        return isinstance(value, NoneValue)

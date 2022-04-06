@@ -20,7 +20,9 @@ class ExpressionParser:
             ('%', 'n', 5, 'left',  'binary', lambda a, b: a % b ),
             ('+', 'n', 4, 'left',  'binary', lambda a, b: a + b ),
             ('-', 'n', 4, 'left',  'binary', lambda a, b: a - b ),
-            ('?', ':', 3, 'left',  'ternary', lambda a, b, c: b if a else c ),
+            ('==', 'n', 3, 'left',  'binary', lambda a, b: None ),
+            ('!=', 'n', 3, 'left',  'binary', lambda a, b: None ),
+            ('?', ':', 2, 'left',  'ternary', lambda a, b, c: b if a else c ),
         ]
 
     def expect(self, condition, errorString):
