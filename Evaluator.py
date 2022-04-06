@@ -3,22 +3,15 @@ from Expression import *
 from Value import *
 from Object import *
 from Garbage import GarbageCollector
+from Scope import Scope
 
 class Evaluator:
     def __init__(self):
-        self.globalScope = {}
+        self.globalScope = Scope(None)
         self.garbageCollector = GarbageCollector()
 
     def error(self, errorMessage):
         print(f"Runtime error: {errorMessage}")
-
-    def setVariable(self, scope, identifier, value):
-        scope[identifier] = value
-
-    def getVariable(self, scope, identifier):
-        if identifier in scope: return scope[identifier]
-        if identifier in self.globalScope: return self.globalScope[identifier]
-        self.error(f"Undeclared variable {identifier}")
 
     def evalExpression(self, scope, expression):
         if isinstance(expression, BooleanExpression):
@@ -31,16 +24,16 @@ class Evaluator:
         elif isinstance(expression, NumberExpression):
             return NumberValue(expression.number)
         elif isinstance(expression, IdentifierExpression):
-            return self.getVariable(scope, expression.identifier)
+            return scope.getVariable(expression.identifier)
         elif isinstance(expression, FunctionCallExpression):
-            function = self.getVariable(scope, expression.identifier.identifier)
+            function = scope.getVariable(expression.identifier.identifier)
             arguments = [self.evalExpression(scope, x) for x in expression.parameters]
             return self.garbageCollector.getObject(function.gcReference).apply(arguments)
 
     def evalStatement(self, scope, statement):
         if isinstance(statement, IfStatement):
             if self.evalExpression(scope, statement.condition).boolean == True:
-                newscope = scope.copy()
+                newscope = Scope(scope)
                 for s in statement.body:
                     self.evalStatement(newscope, s)
         elif isinstance(statement, PrintStatement):
@@ -48,11 +41,11 @@ class Evaluator:
         elif isinstance(statement, ExpressionStatement):
             self.evalExpression(scope, statement.expression)
         elif isinstance(statement, AssignStatement):
-            self.setVariable(scope, statement.identifier, self.evalExpression(scope, statement.expression))
+            scope.setVariable(statement.identifier, self.evalExpression(scope, statement.expression))
         elif isinstance(statement, FunctionStatement):
             obj = FunctionObject(scope, statement.parameters, statement.body, self)
             functionValue = FunctionValue(self.garbageCollector.allocate(obj))
-            self.setVariable(scope, statement.identifier, functionValue)
+            scope.setVariable(statement.identifier, functionValue)
         else:
             print(f"Invalid statement {statement}")
 
