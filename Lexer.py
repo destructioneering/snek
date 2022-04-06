@@ -50,6 +50,7 @@ class Lexer:
         for line in self.iostream:
             line = line.rstrip()
 
+            if len(line) == 0: continue
             if len(line) > 0 and line[0] == '#': continue
 
             newIndentation = self.countIndentation(line)
