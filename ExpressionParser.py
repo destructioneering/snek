@@ -1,5 +1,6 @@
 from Expression import *
 from Token import Token
+from Value import *
 
 class ExpressionParser:
     """
@@ -11,18 +12,22 @@ class ExpressionParser:
         self.operators = [
             ('(', ')', 8, 'left',  'member' ),
             ('[', ']', 8, 'left',  'member' ),
-            ('+', 'n', 7, 'right', 'prefix', lambda a: a),
-            ('-', 'n', 7, 'right', 'prefix', lambda a: -a ),
+            ('+', 'n', 7, 'right', 'prefix',  lambda a: a),
+            ('-', 'n', 7, 'right', 'prefix',  lambda a: -NumberValue(a.number) ),
             ('(', ')', 7, 'left',  'group'  ),
-            ('**', 'n', 6, 'left',  'binary', lambda a, b: a ** b ),
-            ('*', 'n', 5, 'left',  'binary', lambda a, b: a * b ),
-            ('/', 'n', 5, 'left',  'binary', lambda a, b: a / b ),
-            ('%', 'n', 5, 'left',  'binary', lambda a, b: a % b ),
-            ('+', 'n', 4, 'left',  'binary', lambda a, b: a + b ),
-            ('-', 'n', 4, 'left',  'binary', lambda a, b: a - b ),
+            ('**', 'n', 6, 'left',  'binary', lambda a, b: NumberValue(a.number ** b.number) ),
+            ('*', 'n', 5, 'left',  'binary',  lambda a, b: NumberValue(a.number * b.number) ),
+            ('/', 'n', 5, 'left',  'binary',  lambda a, b: NumberValue(a.number / b.number) ),
+            ('%', 'n', 5, 'left',  'binary',  lambda a, b: NumberValue(a.number % b.number) ),
+            ('+', 'n', 4, 'left',  'binary',  lambda a, b: NumberValue(a.number + b.number) ),
+            ('-', 'n', 4, 'left',  'binary',  lambda a, b: NumberValue(a.number - b.number) ),
             ('==', 'n', 3, 'left',  'binary', lambda a, b: None ),
             ('!=', 'n', 3, 'left',  'binary', lambda a, b: None ),
-            ('?', ':', 2, 'left',  'ternary', lambda a, b, c: b if a else c ),
+            ('<=', 'n', 3, 'left',  'binary', lambda a, b: BooleanValue(a.number <= b.number) ),
+            ('>=', 'n', 3, 'left',  'binary', lambda a, b: BooleanValue(a.number >= b.number) ),
+            ('<', 'n', 3, 'left',  'binary',  lambda a, b: BooleanValue(a.number < b.number) ),
+            ('>', 'n', 3, 'left',  'binary',  lambda a, b: BooleanValue(a.number > b.number) ),
+            ('if', 'else', 2, 'left',  'ternary', lambda a, b, c: b if a else c ),
         ]
 
     def expect(self, condition, errorString):
@@ -34,8 +39,8 @@ class ExpressionParser:
         return self.tokens[self.tokenIndex]
 
     def nextToken(self):
-        if self.tokenIndex >= len(self.tokens): return None
         self.tokenIndex += 1
+        if self.tokenIndex >= len(self.tokens): return None
         return self.tokens[self.tokenIndex - 1]
 
     def token(self):
