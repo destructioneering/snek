@@ -50,6 +50,12 @@ class Evaluator:
                 newscope = Scope(scope)
                 for s in statement.body:
                     self.evalStatement(newscope, s)
+            elif statement.otherwise != None:
+                if isinstance(statement.otherwise, list):
+                    for s in statement.otherwise:
+                        self.evalStatement(scope, s)
+                else:
+                    self.evalStatement(scope, statement.otherwise)
         elif isinstance(statement, PrintStatement):
             self.evalExpression(scope, statement.expression).print()
         elif isinstance(statement, ReturnStatement):

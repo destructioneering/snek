@@ -50,6 +50,32 @@ class Parser:
             statements.append(statement)
         return statements
 
+    def parseElseElif(self):
+        """Returns either an IfStatement or some other kind of statement."""
+        if self.token() and self.token().ident() == 'elif':
+            self.nextToken()
+            elsecondition = self.parseExpression()
+            self.expect(self.token().punct() == ':', 'Expected a `:`')
+            self.nextToken()    # Skip the :
+            self.expect(self.token().indent(), 'Expected an indent')
+            self.nextToken()    # Skip the indent
+            elsebody = self.parseStatementList()
+            self.expect(self.token().dedent(), 'Expected a dedent')
+            self.nextToken()
+            return IfStatement(elsecondition, elsebody, self.parseElseElif())
+        elif self.token() and self.token().ident() == 'else':
+            self.nextToken()
+            self.expect(self.token().punct() == ':', 'Expected a `:`')
+            self.nextToken()    # Skip the :
+            self.expect(self.token().indent(), 'Expected an indent')
+            self.nextToken()    # Skip the indent
+            elsebody = self.parseStatementList()
+            self.expect(self.token().dedent(), 'Expected a dedent')
+            self.nextToken()
+            return elsebody
+
+        return None
+
     def parseIf(self):
         self.nextToken()
         condition = self.parseExpression()
@@ -60,7 +86,7 @@ class Parser:
         body = self.parseStatementList()
         self.expect(self.token().dedent(), 'Expected a dedent')
         self.nextToken()
-        return IfStatement(condition, body)
+        return IfStatement(condition, body, self.parseElseElif())
 
     def parsePrint(self):
         self.nextToken()

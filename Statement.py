@@ -2,9 +2,10 @@ class Statement:
     pass
 
 class IfStatement(Statement):
-    def __init__(self, condition, body):
+    def __init__(self, condition, body, otherwise):
         self.condition = condition
         self.body = body
+        self.otherwise = otherwise
 
 class PrintStatement(Statement):
     def __init__(self, expression):
