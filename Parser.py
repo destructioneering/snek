@@ -53,12 +53,13 @@ class Parser:
     def parseIf(self):
         self.nextToken()
         condition = self.parseExpression()
-        self.nextToken()
         self.expect(self.token().punct() == ':', 'Expected `:`')
-        self.expect(self.token().indent() != None, 'Expected an indent')
+        self.nextToken()
+        self.expect(self.token().indent(), 'Expected an indent')
         self.nextToken()
         body = self.parseStatementList()
-        self.expect(self.token().dedent() != None, 'Expected a dedent')
+        self.expect(self.token().dedent(), 'Expected a dedent')
+        self.nextToken()
         return IfStatement(condition, body)
 
     def parsePrint(self):
