@@ -1,10 +1,3 @@
-# Boo
+# Snek
 
-A brief definition of the language:
-
-Tokens:
-
-+ STRING
-+ PUNCT
-+ NUM
-+ IDENT
+A toy language for experimentation with garbage collection algorithms.
