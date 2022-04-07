@@ -4,8 +4,8 @@ from enum import Enum
 from Token import Token
 
 class Lexer:
-    def __init__(self, iostream):
-        self.iostream = iostream
+    def __init__(self, code):
+        self.code = code
 
         self.words = [
             ['STRING', r'(?:\'.*?\'|".*?")', None],
@@ -47,7 +47,7 @@ class Lexer:
         oldIndentation = 0
         tokens = []
 
-        for line in self.iostream:
+        for line in self.code.splitlines():
             line = line.rstrip()
 
             if len(line) == 0: continue

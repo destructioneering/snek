@@ -1,6 +1,5 @@
 from enum import Enum
 import json
-import jsonpickle
 
 from Statement import *
 from Expression import *
@@ -186,7 +185,8 @@ class Parser:
         """
         Pretty print the AST.
         """
-        print(jsonpickle.encode(self.statements))
+        #print(jsonpickle.encode(self.statements))
+        pass
 
     def parse(self):
         """
