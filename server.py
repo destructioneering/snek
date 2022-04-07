@@ -6,6 +6,7 @@ from flask import Blueprint, render_template, flash, redirect, url_for, request,
 basedir = os.path.abspath(os.path.dirname(__file__))
 
 class Config(object):
+    STATIC_FOLDER = os.path.join(basedir, './static')
     TEMPLATE_FOLDER = os.path.join(basedir, '.')
 
 bp = Blueprint('routes', __name__)
@@ -14,6 +15,10 @@ bp.template_folder = Config.TEMPLATE_FOLDER
 @bp.route('/', methods=['GET'])
 def index():
     return render_template('index.html', title='snek')
+
+@bp.route('/static/<path>')
+def static(path):
+    return send_from_directory(Config.STATIC_FOLDER, path)
 
 def create_app(config_class = Config):
     app = Flask(__name__)

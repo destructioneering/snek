@@ -1,1 +1,40 @@
-hi
+<!DOCTYPE html>
+<html>
+  <head>
+    <script src="/static/ace.js" type="text/javascript" charset="utf-8"></script>
+    <script src="/static/mode-python.js" type="text/javascript" charset="utf-8"></script>
+    <script src="/static/theme-solarized_light.js" type="text/javascript" charset="utf-8"></script>
+    <link type="text/css" rel="stylesheet" href="{{ url_for('static', filename='main.css') }}">
+  </head>
+  <body>
+    <div class="container">
+      <h1>Snek demo</h1>
+      <div class="content-container">
+        <div class="left-container">
+          <div class="run-button">
+            <div>
+              <img style="width: 20px" src="{{ url_for('static', filename='play.svg') }}" />
+            </div>
+          </div>
+          <div id="editor" class="editor">print('Hello, world!')</div>
+        </div>
+        <div class="right-container">
+          <div class="tab-container">
+            <div class="tab">Console output</div>
+            <div class="tab">GC events</div>
+          </div>
+          <div class="tab-content-container">
+            test
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      var editor = ace.edit("editor");
+      var PythonMode = ace.require("ace/mode/python").Mode;
+      editor.session.setMode(new PythonMode());
+      editor.setTheme("ace/theme/solarized_light");
+    </script>
+  </body>
+</html>
