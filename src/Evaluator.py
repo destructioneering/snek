@@ -34,10 +34,31 @@ class Evaluator:
         elif isinstance(expression, BinaryExpression):
             if expression.operator == '==':
                 return BooleanValue(self.evalExpression(scope, expression.left).compareTo(self.evalExpression(scope, expression.right)))
-            elif expression.operator == '=':
-                newscope = self.getScopeFromExpression(scope, expression.left.left)
-                right = self.evalExpression(scope, expression.right)
-                newscope.setVariable(expression.left.right.identifier, right)
+            elif expression.operator in ['=', '*=', '+=', '-=', '/=']:
+                if isinstance(expression.left, BinaryExpression):
+                    # The lefthand side of the = should be a x.y type thing.
+                    newscope = self.getScopeFromExpression(scope, expression.left.left)
+                    lefthand = None
+                    try:
+                        lefthand = self.evalExpression(scope, expression.left)
+                    except:     # TODO: Make a custom exception for undeclared variables.
+                        # TODO: Assert that this is a = and not a += or something like that.
+                        lefthand = None
+                    righthand = self.evalExpression(scope, expression.right)
+                    val = expression.function(lefthand, righthand)
+                    newscope.setVariable(expression.left.right.identifier, val)
+                    return val
+                else:
+                    # The lefthand side of the = should be an identifier then.
+                    lefthand = None
+                    try:
+                        lefthand = self.evalExpression(scope, expression.left)
+                    except:
+                        lefthand = None
+                    righthand = self.evalExpression(scope, expression.right)
+                    val = expression.function(lefthand, righthand)
+                    scope.setVariable(expression.left.identifier, val)
+                    return val
             elif expression.operator == '!=':
                 return BooleanValue(not self.evalExpression(scope, expression.left).compareTo(self.evalExpression(scope, expression.right)))
             elif expression.operator == '.':
@@ -45,7 +66,7 @@ class Evaluator:
                 if not isinstance(left, ClassValue): print('error')
                 identifier = expression.right.identifier
                 classObject = self.garbageCollector.getObject(left.gcReference)
-                right = classObject.scope.variables[identifier]
+                right = classObject.scope.getVariable(identifier)
                 if isinstance(right, FunctionValue):
                     return MethodValue(left, right)
                 else:
@@ -109,8 +130,6 @@ class Evaluator:
             raise ReturnException(self.evalExpression(scope, statement.expression))
         elif isinstance(statement, ExpressionStatement):
             self.evalExpression(scope, statement.expression)
-        elif isinstance(statement, AssignStatement):
-            scope.setVariable(statement.identifier, self.evalExpression(scope, statement.expression))
         elif isinstance(statement, FunctionStatement):
             obj = FunctionObject(scope, statement.parameters, statement.body, self)
             functionValue = FunctionValue(self.garbageCollector.allocate(obj))

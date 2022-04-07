@@ -180,16 +180,6 @@ class Parser:
             return self.parseClass()
         elif token.dedent():
             raise DedentException()
-        elif token.ident() != None: # Could be an assignment
-            equalSign = self.nextToken()
-
-            # Check to see if this is a variable assignment
-            if equalSign.punct() == '=':
-                self.nextToken()
-                return AssignStatement(token.ident(), self.parseExpression())
-            else:
-                self.putTokenBack()
-                return self.parseExpressionStatement()
         else:
             return self.parseExpressionStatement()
 

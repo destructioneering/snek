@@ -24,11 +24,6 @@ class ExpressionStatement(Statement):
     def __init__(self, expression):
         self.expression = expression
 
-class AssignStatement(Statement):
-    def __init__(self, identifier, expression):
-        self.identifier = identifier
-        self.expression = expression
-
 class FunctionStatement(Statement):
     def __init__(self, identifier, parameters, body):
         self.identifier = identifier

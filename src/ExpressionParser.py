@@ -28,7 +28,11 @@ class ExpressionParser:
             ('>=', 'n', 3, 'left',  'binary', lambda a, b: BooleanValue(a.number >= b.number) ),
             ('<', 'n', 3, 'left',  'binary',  lambda a, b: BooleanValue(a.number < b.number) ),
             ('>', 'n', 3, 'left',  'binary',  lambda a, b: BooleanValue(a.number > b.number) ),
-            ('=', 'n', 2, 'right',  'binary', lambda a, b: None ),
+            ('+=', 'n', 2, 'right',  'binary', lambda a, b: NumberValue(a.number + b.number) ),
+            ('*=', 'n', 2, 'right',  'binary', lambda a, b: NumberValue(a.number * b.number) ),
+            ('/=', 'n', 2, 'right',  'binary', lambda a, b: NumberValue(a.number / b.number) ),
+            ('-=', 'n', 2, 'right',  'binary', lambda a, b: NumberValue(a.number - b.number) ),
+            ('=', 'n', 2, 'right',  'binary', lambda a, b: b ),
             ('if', 'else', 1, 'left',  'ternary', lambda a, b, c: b if a else c ),
         ]
 
