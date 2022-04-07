@@ -51,14 +51,15 @@ class Tree:
         self.species = species
 
     def addYear(self):
-        self.age = self.age + 1
+        self.age += 1
+
+    def show(self):
+        print('age: ', self.age, ', species: ', self.species)
 
 tree = Tree(10, 'conifer')
 
-print(tree.age)
-print(tree.species)
-
 tree.addYear()
+tree.show()
 
 print(tree.age)
 
