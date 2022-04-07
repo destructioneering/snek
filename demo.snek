@@ -34,7 +34,7 @@ else:
 i = 0
 while i < 10:
     print(i)
-    i = i + 1
+    i += 1
 
 # Functions
 
@@ -72,3 +72,16 @@ def multiplier(n):
 f = multiplier(3)
 
 print(f(10))
+
+# Let's look at a linked list.
+
+class Node:
+    def __init__(self, data, nn):
+        self.data = data
+        self.nn = nn
+
+node = Node(1, Node(2, Node(3, None)))
+
+while node != None:
+    print(node.data)
+    node = node.nn
