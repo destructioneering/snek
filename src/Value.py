@@ -7,7 +7,7 @@ class StringValue(Value):
         self.string = string
 
     def print(self):
-        print(self.string)
+        print(self.string, end="")
 
     def compareTo(self, value):
         if not isinstance(value, StringValue): return False
@@ -18,7 +18,7 @@ class NumberValue(Value):
         self.number = number
 
     def print(self):
-        print(self.number)
+        print(self.number, end="")
 
     def compareTo(self, value):
         if not isinstance(value, NumberValue): return False
@@ -29,7 +29,7 @@ class BooleanValue(Value):
         self.boolean = boolean
 
     def print(self):
-        print(self.boolean)
+        print(self.boolean, end="")
 
     def compareTo(self, value):
         if not isinstance(value, BooleanValue): return False
@@ -53,7 +53,7 @@ class ClassValue(Value):
         self.gcReference = gcReference
 
     def print(self):
-        print(self.gc.getObject(self.gcReference))
+        print(self.gc.getObject(self.gcReference), end="")
 
     def compareTo(self, value):
         if not isinstance(value, ClassValue): return False
@@ -69,7 +69,7 @@ class NoneValue(Value):
         pass
 
     def print(self):
-        print('None')
+        print('None', end="")
 
     def compareTo(self, value):
         return isinstance(value, NoneValue)

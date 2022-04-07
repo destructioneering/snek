@@ -6,9 +6,15 @@ from Garbage import GarbageCollector
 from Scope import Scope
 from ReturnException import ReturnException
 
+def printBuiltin(args):
+    for arg in args:
+        arg.print()
+    print()
+
 class Evaluator:
     def __init__(self):
         self.globalScope = Scope(None)
+        self.globalScope.setVariable('print', BuiltinValue(printBuiltin))
         self.garbageCollector = GarbageCollector()
 
     def error(self, errorMessage):

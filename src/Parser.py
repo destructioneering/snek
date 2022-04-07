@@ -99,10 +99,6 @@ class Parser:
         self.nextToken()
         return WhileStatement(condition, body)
 
-    def parsePrint(self):
-        self.nextToken()
-        return PrintStatement(self.parseExpression())
-
     def parseReturn(self):
         self.nextToken()
         return ReturnStatement(self.parseExpression())
@@ -170,8 +166,6 @@ class Parser:
             return self.parseIf()
         elif token.ident() == 'while':
             return self.parseWhile()
-        elif token.ident() == 'print':
-            return self.parsePrint()
         elif token.ident() == 'def':
             return self.parseFunction()
         elif token.ident() == 'return':
