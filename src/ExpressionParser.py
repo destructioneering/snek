@@ -28,7 +28,8 @@ class ExpressionParser:
             ('>=', 'n', 3, 'left',  'binary', lambda a, b: BooleanValue(a.number >= b.number) ),
             ('<', 'n', 3, 'left',  'binary',  lambda a, b: BooleanValue(a.number < b.number) ),
             ('>', 'n', 3, 'left',  'binary',  lambda a, b: BooleanValue(a.number > b.number) ),
-            ('if', 'else', 2, 'left',  'ternary', lambda a, b, c: b if a else c ),
+            ('=', 'n', 2, 'right',  'binary', lambda a, b: None ),
+            ('if', 'else', 1, 'left',  'ternary', lambda a, b, c: b if a else c ),
         ]
 
     def expect(self, condition, errorString):
