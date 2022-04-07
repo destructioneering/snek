@@ -10,7 +10,7 @@ body {
     margin: 0;
     height: 100%;
 
-    font-size: 14px;
+    font-size: 16px;
     font-weight: 400;
     font-family: 'Roboto', sans-serif;
 }
@@ -43,10 +43,11 @@ body {
 .right-container {
     flex: 1;
     margin-left: 20px;
+    background: rgb(253, 246, 227);
 }
 
 .tab-content-container {
-    padding: 20px;
+    height: 100%;
 }
 
 .editor {
@@ -57,15 +58,15 @@ body {
 
 .tab-container {
     position: absolute;
-    height: 20px;
-    top: -20px;
+    height: 18px;
+    top: -18px;
     display: flex;
     padding-left: 30px;
 }
 
 .tab {
-    height: 20px;
-    line-height: 23px;
+    height: 18px;
+    line-height: 24px;
     font-size: 14px;
     background: lightblue;
     margin-right: 10px;
@@ -74,6 +75,7 @@ body {
     opacity: 0.5;
     cursor: pointer;
     transition: opacity 0.1s;
+    font-family: Courier;
 }
 
 .tab:hover {
@@ -94,6 +96,24 @@ body {
     justify-content: center;
     align-items: center;
     cursor: pointer;
+    transition: background 0.5s;
+}
+
+.run-button svg {
+    width: 20px;
+    height: 20px;
+    fill: white;
+    stroke: white;
+    filter: drop-shadow(2px 3px 2px rgb(0 0 0 / 0.4));
+}
+
+.run-button:hover {
+    background: #f15555;
+}
+
+.run-button:active {
+    background: red;
+    transition: background 0s;
 }
 
 .run-button > div {
@@ -107,6 +127,20 @@ body {
     user-select: none;
 }
 
-.run-button:active {
-    background: red;
+.tab-content-container > div {
+    display: none;
+}
+
+.button-pressed {
+    background: orange;
+    opacity: 1;
+}
+
+.console-output-tab {
+    font-family: Courier;
+    background: black;
+    color: white;
+    padding: 10px;
+    height: 100%;
+    overflow: scroll;
 }

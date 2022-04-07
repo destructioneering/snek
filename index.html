@@ -4,6 +4,11 @@
     <script src="/static/ace.js" type="text/javascript" charset="utf-8"></script>
     <script src="/static/mode-python.js" type="text/javascript" charset="utf-8"></script>
     <script src="/static/theme-solarized_light.js" type="text/javascript" charset="utf-8"></script>
+    <script src="//code.jquery.com/jquery-3.6.0.js"></script>
+    <script src="//code.jquery.com/ui/1.13.1/jquery-ui.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fenix&family=Inder&family=Montserrat&family=Roboto&display=swap" rel="stylesheet">
     <link type="text/css" rel="stylesheet" href="{{ url_for('static', filename='main.css') }}">
   </head>
   <body>
@@ -13,28 +18,63 @@
         <div class="left-container">
           <div class="run-button">
             <div>
-              <img style="width: 20px" src="{{ url_for('static', filename='play.svg') }}" />
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-play"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
             </div>
           </div>
           <div id="editor" class="editor">print('Hello, world!')</div>
         </div>
         <div class="right-container">
           <div class="tab-container">
-            <div class="tab">Console output</div>
-            <div class="tab">GC events</div>
+            <div class="tab console-button button-pressed">Console output</div>
+            <div class="tab gc-button">GC events</div>
+            <div class="tab help-button">Help</div>
           </div>
           <div class="tab-content-container">
-            test
+            <div class="console-output-tab" style="display: block" >foo bar baz</div>
+            <div class="gc-events-tab">bar</div>
+            <div class="help-tab">baz</div>
           </div>
         </div>
       </div>
     </div>
 
     <script>
-      var editor = ace.edit("editor");
-      var PythonMode = ace.require("ace/mode/python").Mode;
-      editor.session.setMode(new PythonMode());
-      editor.setTheme("ace/theme/solarized_light");
+      $(document).ready(function() {
+
+          // Set up the editor.
+          var editor = ace.edit("editor");
+          var PythonMode = ace.require("ace/mode/python").Mode;
+          editor.session.setMode(new PythonMode());
+          editor.setTheme("ace/theme/solarized_light");
+
+          // Set up the tabs.
+          $('.console-button').click(function() {
+              $('.gc-events-tab').hide()
+              $('.help-tab').hide()
+              $('.console-output-tab').show()
+
+              $('.tab').removeClass('button-pressed');
+              $(this).addClass('button-pressed');
+          });
+
+          $('.gc-button').click(function() {
+              $('.console-output-tab').hide()
+              $('.help-tab').hide()
+              $('.gc-events-tab').show()
+
+              $('.tab').removeClass('button-pressed');
+              $(this).addClass('button-pressed');
+          });
+
+          $('.help-button').click(function() {
+              $('.gc-events-tab').hide()
+              $('.console-output-tab').hide()
+              $('.help-tab').show()
+
+              $('.tab').removeClass('button-pressed');
+              $(this).addClass('button-pressed');
+          });
+      });
     </script>
   </body>
 </html>
