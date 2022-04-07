@@ -81,7 +81,7 @@
           for i, line in enumerate(output.splitlines()):
               container = html.DIV('', Class="output-line-container")
               outputElement <= container
-              container <= html.DIV(html.DIV(i), Class="line-number")
+              container <= html.DIV(html.DIV(i + 1), Class="line-number")
               container <= html.DIV(line, Class="output-line")
 
       window.handleCode = handleCode
