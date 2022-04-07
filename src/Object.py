@@ -46,3 +46,11 @@ class LambdaObject(Object):
         for i in range(len(arguments)):
             newscope.setVariable(self.parameters[i], arguments[i])
         return self.evaluator.evalExpression(newscope, self.body)
+
+class ClassConstructorObject(Object):
+    def __init__(self, scope):
+        self.scope = scope
+
+class ClassObject(Object):
+    def __init__(self, scope):
+        self.scope = scope

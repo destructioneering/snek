@@ -46,8 +46,8 @@ class MemberExpression(Expression):
         self.right = right
 
 class FunctionCallExpression(Expression):
-    def __init__(self, identifier, parameters):
-        self.identifier = identifier
+    def __init__(self, left, parameters):
+        self.left = left
         self.parameters = parameters
 
 class LambdaExpression(Expression):

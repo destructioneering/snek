@@ -1,5 +1,6 @@
 class Value:
-    pass
+    def __init__(self, gc):
+        self.gc = gc
 
 class StringValue(Value):
     def __init__(self, string):
@@ -42,7 +43,27 @@ class LambdaValue(Value):
     def __init__(self, gcReference):
         self.gcReference = gcReference
 
+class ClassConstructorValue(Value):
+    def __init__(self, gcReference):
+        self.gcReference = gcReference
+
+class ClassValue(Value):
+    def __init__(self, gc, gcReference):
+        super().__init__(gc)
+        self.gcReference = gcReference
+
+    def print(self):
+        print(self.gc.getObject(self.gcReference))
+
+class MethodValue(Value):
+    def __init__(self, classValue, functionValue):
+        self.classValue = classValue
+        self.functionValue = functionValue
+
 class NoneValue(Value):
+    def __init__(self):
+        pass
+
     def print(self):
         print('None')
 

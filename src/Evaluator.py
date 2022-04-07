@@ -22,8 +22,18 @@ class Evaluator:
         elif isinstance(expression, BinaryExpression):
             if expression.operator == '==':
                 return BooleanValue(self.evalExpression(scope, expression.left).compareTo(self.evalExpression(scope, expression.right)))
-            if expression.operator == '!=':
+            elif expression.operator == '!=':
                 return BooleanValue(not self.evalExpression(scope, expression.left).compareTo(self.evalExpression(scope, expression.right)))
+            elif expression.operator == '.':
+                left = self.evalExpression(scope, expression.left)
+                if not isinstance(left, ClassValue): print('error')
+                identifier = expression.right.identifier
+                classObject = self.garbageCollector.getObject(left.gcReference)
+                right = classObject.scope.variables[identifier]
+                if isinstance(right, FunctionValue):
+                    return MethodValue(left, right)
+                else:
+                    return right
             else:
                 return expression.function(self.evalExpression(scope, expression.left),
                                            self.evalExpression(scope, expression.right))
@@ -32,9 +42,25 @@ class Evaluator:
         elif isinstance(expression, IdentifierExpression):
             return scope.getVariable(expression.identifier)
         elif isinstance(expression, FunctionCallExpression):
-            function = scope.getVariable(expression.identifier.identifier)
-            arguments = [self.evalExpression(scope, x) for x in expression.parameters]
-            return self.garbageCollector.getObject(function.gcReference).apply(arguments)
+            function = self.evalExpression(scope, expression.left)
+            if isinstance(function, ClassConstructorValue):
+                newscope = self.garbageCollector.getObject(function.gcReference).scope
+                # This should be a shallow copy; that's intentional.
+                newscope.variables = newscope.variables.copy()
+                obj = ClassObject(newscope)
+                val = ClassValue(self.garbageCollector, self.garbageCollector.allocate(obj))
+                if '__init__' in newscope.variables:
+                    constructor = newscope.variables['__init__']
+                    arguments = [self.evalExpression(scope, x) for x in expression.parameters]
+                    self.garbageCollector.getObject(constructor.gcReference).apply([val] + arguments)
+                return val
+            elif isinstance(function, MethodValue):
+                classValue = function.classValue
+                arguments = [self.evalExpression(scope, x) for x in expression.parameters]
+                return self.garbageCollector.getObject(function.gcReference).apply([classValue] + arguments)
+            elif isinstance(function, FunctionValue):
+                arguments = [self.evalExpression(scope, x) for x in expression.parameters]
+                return self.garbageCollector.getObject(function.gcReference).apply(arguments)
         elif isinstance(expression, LambdaExpression):
             obj = LambdaObject(scope, expression.parameters, expression.body, self)
             lambdaValue = LambdaValue(self.garbageCollector.allocate(obj))
@@ -69,24 +95,12 @@ class Evaluator:
             functionValue = FunctionValue(self.garbageCollector.allocate(obj))
             scope.setVariable(statement.identifier, functionValue)
         elif isinstance(statement, ClassStatement):
-            # + Add ClassConstructorValue value to scope.
-            # + Points to a ClassConstructorObject.
-            # + ClassConstructorObject contains a dictionary with
-            #   method names to FunctionObjects.
-            # + Constructing a class looks up the ClassConstructorObject
-            #   and calls the constructor as a regular function, passing
-            #   in a new ClassValue, which points to a new ClassObject.
-            #   Then it adds all of the methods from the ClassConstructorObject
-            #   to the ClassObject.
-            # + "Member" syntax will have to be implemented.
-            # + When a MemberExpression is evaluated it'll check to
-            #   see if the member is a function and if it is it'll
-            #   return a MethodValue that's just a function with its
-            #   ClassObject.
-
-            obj = FunctionObject(scope, statement.parameters, statement.body, self)
-            functionValue = FunctionValue(self.garbageCollector.allocate(obj))
-            scope.setVariable(statement.identifier, functionValue)
+            newscope = Scope(scope)
+            for stmt in statement.body:
+                self.evalStatement(newscope, stmt)
+            obj = ClassConstructorObject(newscope)
+            val = ClassConstructorValue(self.garbageCollector.allocate(obj))
+            scope.setVariable(statement.identifier, val)
         else:
             print(f"Invalid statement {statement}")
 
