@@ -72,9 +72,11 @@ class Evaluator:
                 classValue = function.classValue
                 arguments = [self.evalExpression(scope, x) for x in expression.parameters]
                 return self.garbageCollector.getObject(function.functionValue.gcReference).apply([classValue] + arguments)
-            elif isinstance(function, FunctionValue):
+            elif isinstance(function, FunctionValue) or isinstance(function, LambdaValue):
                 arguments = [self.evalExpression(scope, x) for x in expression.parameters]
                 return self.garbageCollector.getObject(function.gcReference).apply(arguments)
+            else:
+                print(f"error: {function}")
         elif isinstance(expression, LambdaExpression):
             obj = LambdaObject(scope, expression.parameters, expression.body, self)
             lambdaValue = LambdaValue(self.garbageCollector.allocate(obj))
