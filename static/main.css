@@ -19,6 +19,23 @@ body {
     font-family: 'Roboto', sans-serif;
 }
 
+.title {
+    display: flex;
+    align-items: flex-end;
+    margin-top: 20px;
+}
+
+.title a {
+    margin-left: 20px;
+    text-decoration: none;
+    color: blue;
+    margin-bottom: 2px;
+}
+
+.title div {
+    font-size: 26px;
+}
+
 .container {
     padding: 10px;
     position: relative;
