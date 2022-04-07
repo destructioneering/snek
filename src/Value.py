@@ -55,6 +55,10 @@ class ClassValue(Value):
     def print(self):
         print(self.gc.getObject(self.gcReference))
 
+    def compareTo(self, value):
+        if not isinstance(value, ClassValue): return False
+        return self.gcReference == value.gcReference
+
 class MethodValue(Value):
     def __init__(self, classValue, functionValue):
         self.classValue = classValue
