@@ -31,6 +31,6 @@ class FunctionStatement(Statement):
         self.body = body
 
 class ClassStatement(Statement):
-    def __init__(self, identifier, methods):
+    def __init__(self, identifier, body):
         self.identifier = identifier
-        self.methods = methods
+        self.body = body

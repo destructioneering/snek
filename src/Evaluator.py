@@ -69,7 +69,7 @@ class Evaluator:
             functionValue = FunctionValue(self.garbageCollector.allocate(obj))
             scope.setVariable(statement.identifier, functionValue)
         elif isinstance(statement, ClassStatement):
-            # + Add ClassConstructor value to scope.
+            # + Add ClassConstructorValue value to scope.
             # + Points to a ClassConstructorObject.
             # + ClassConstructorObject contains a dictionary with
             #   method names to FunctionObjects.

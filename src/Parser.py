@@ -139,13 +139,10 @@ class Parser:
         self.nextToken()
         self.expect(self.token().indent(), 'Expected an indent at start of class body')
         self.nextToken()
-        methods = self.parseStatementList()
+        body = self.parseStatementList()
         self.expect(self.token().dedent(), 'Expected a dedent at end of class body')
         self.nextToken()
-        for method in methods:
-            if not isinstance(method, FunctionStatement):
-                print('Class members can only be methods')
-        return ClassStatement(identifier.ident(), methods)
+        return ClassStatement(identifier.ident(), body)
 
     def parseExpressionStatement(self):
         return ExpressionStatement(self.parseExpression())
