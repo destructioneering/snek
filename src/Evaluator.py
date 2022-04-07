@@ -14,6 +14,18 @@ class Evaluator:
     def error(self, errorMessage):
         print(f"Runtime error: {errorMessage}")
 
+    def getScopeFromExpression(self, scope, expression):
+        if isinstance(expression, BinaryExpression) and expression.operator == '.':
+            left = self.getScopeFromExpression(scope, expression.left)
+            right = self.evalExpression(left, expression.right)
+            return self.garbageCollector.getObject(right.gcReference).scope
+        else:
+            if isinstance(expression, IdentifierExpression):
+                val = scope.getVariable(expression.identifier)
+                return self.garbageCollector.getObject(val.gcReference).scope
+            else:
+                print('error')
+
     def evalExpression(self, scope, expression):
         if isinstance(expression, BooleanExpression):
             return BooleanValue(expression.boolean)
@@ -22,6 +34,10 @@ class Evaluator:
         elif isinstance(expression, BinaryExpression):
             if expression.operator == '==':
                 return BooleanValue(self.evalExpression(scope, expression.left).compareTo(self.evalExpression(scope, expression.right)))
+            elif expression.operator == '=':
+                newscope = self.getScopeFromExpression(scope, expression.left.left)
+                right = self.evalExpression(scope, expression.right)
+                newscope.setVariable(expression.left.right.identifier, right)
             elif expression.operator == '!=':
                 return BooleanValue(not self.evalExpression(scope, expression.left).compareTo(self.evalExpression(scope, expression.right)))
             elif expression.operator == '.':
@@ -57,7 +73,7 @@ class Evaluator:
             elif isinstance(function, MethodValue):
                 classValue = function.classValue
                 arguments = [self.evalExpression(scope, x) for x in expression.parameters]
-                return self.garbageCollector.getObject(function.gcReference).apply([classValue] + arguments)
+                return self.garbageCollector.getObject(function.functionValue.gcReference).apply([classValue] + arguments)
             elif isinstance(function, FunctionValue):
                 arguments = [self.evalExpression(scope, x) for x in expression.parameters]
                 return self.garbageCollector.getObject(function.gcReference).apply(arguments)
