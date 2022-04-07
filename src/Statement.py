@@ -7,6 +7,11 @@ class IfStatement(Statement):
         self.body = body
         self.otherwise = otherwise
 
+class WhileStatement(Statement):
+    def __init__(self, condition, body):
+        self.condition = condition
+        self.body = body
+
 class PrintStatement(Statement):
     def __init__(self, expression):
         self.expression = expression

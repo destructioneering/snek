@@ -87,6 +87,18 @@ class Parser:
         self.nextToken()
         return IfStatement(condition, body, self.parseElseElif())
 
+    def parseWhile(self):
+        self.nextToken()
+        condition = self.parseExpression()
+        self.expect(self.token().punct() == ':', 'Expected `:`')
+        self.nextToken()
+        self.expect(self.token().indent(), 'Expected an indent')
+        self.nextToken()
+        body = self.parseStatementList()
+        self.expect(self.token().dedent(), 'Expected a dedent')
+        self.nextToken()
+        return WhileStatement(condition, body)
+
     def parsePrint(self):
         self.nextToken()
         return PrintStatement(self.parseExpression())
@@ -156,6 +168,8 @@ class Parser:
 
         if token.ident() == 'if':
             return self.parseIf()
+        elif token.ident() == 'while':
+            return self.parseWhile()
         elif token.ident() == 'print':
             return self.parsePrint()
         elif token.ident() == 'def':
