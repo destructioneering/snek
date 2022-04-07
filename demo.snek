@@ -28,14 +28,21 @@ elif a > b:
     print('a is greater')
 else:
     print('b is greater')
-    
+
+# While loops (but not for loops)
+
+i = 0
+while i < 10:
+    print(i)
+    i = i + 1
+
 # Functions
 
 def add(x, y):
     return x + y
-    
+
 print(add(a, b))
-    
+
 # Classes (without inheritance)
 
 class Tree:
@@ -59,7 +66,7 @@ print(tree.age)
 
 def multiplier(n):
     return lambda x: n * x
-    
+
 # f is a function that multiplies a number
 # by 3.
 f = multiplier(3)
