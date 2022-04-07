@@ -4,6 +4,12 @@ class Scope:
         self.variables = {}
 
     def setVariable(self, identifier, value):
+        tmp = self
+        while tmp != None:
+            if identifier in tmp.variables:
+                tmp.variables[identifier] = value
+                return
+            tmp = tmp.parent
         self.variables[identifier] = value
 
     def getVariable(self, identifier):
