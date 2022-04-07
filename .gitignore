@@ -2,5 +2,5 @@ __pycache__
 presentation.org
 snekenv/
 tmp/
-*.snek
+src/*.snek
 

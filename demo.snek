@@ -1,0 +1,67 @@
+# Hello, welcome to Snek.
+
+# Snek is a subset of Python, which means
+# you don't have to learn any new syntax to
+# watch the garbage collector.
+
+# But it has a lot less stuff than Python.
+# Here's the rundown of what you can do:
+
+# Variables
+
+a = 2
+b = 5
+
+# Print
+
+print(a * b)
+
+# A bunch of math operators
+
+print(3 + 4 * 2 / (1 - 5)**2**3)
+
+# If statements
+
+if a == b:
+    print('equal')
+elif a > b:
+    print('a is greater')
+else:
+    print('b is greater')
+    
+# Functions
+
+def add(x, y):
+    return x + y
+    
+print(add(a, b))
+    
+# Classes (without inheritance)
+
+class Tree:
+    def __init__(self, age, species):
+        self.age = age
+        self.species = species
+
+    def addYear(self):
+        self.age = self.age + 1
+
+tree = Tree(10, 'conifer')
+
+print(tree.age)
+print(tree.species)
+
+tree.addYear()
+
+print(tree.age)
+
+# Lambdas (and closures)
+
+def multiplier(n):
+    return lambda x: n * x
+    
+# f is a function that multiplies a number
+# by 3.
+f = multiplier(3)
+
+print(f(10))
