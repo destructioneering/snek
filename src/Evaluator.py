@@ -68,6 +68,25 @@ class Evaluator:
             obj = FunctionObject(scope, statement.parameters, statement.body, self)
             functionValue = FunctionValue(self.garbageCollector.allocate(obj))
             scope.setVariable(statement.identifier, functionValue)
+        elif isinstance(statement, ClassStatement):
+            # + Add ClassConstructor value to scope.
+            # + Points to a ClassConstructorObject.
+            # + ClassConstructorObject contains a dictionary with
+            #   method names to FunctionObjects.
+            # + Constructing a class looks up the ClassConstructorObject
+            #   and calls the constructor as a regular function, passing
+            #   in a new ClassValue, which points to a new ClassObject.
+            #   Then it adds all of the methods from the ClassConstructorObject
+            #   to the ClassObject.
+            # + "Member" syntax will have to be implemented.
+            # + When a MemberExpression is evaluated it'll check to
+            #   see if the member is a function and if it is it'll
+            #   return a MethodValue that's just a function with its
+            #   ClassObject.
+
+            obj = FunctionObject(scope, statement.parameters, statement.body, self)
+            functionValue = FunctionValue(self.garbageCollector.allocate(obj))
+            scope.setVariable(statement.identifier, functionValue)
         else:
             print(f"Invalid statement {statement}")
 

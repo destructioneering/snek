@@ -10,6 +10,7 @@ class ExpressionParser:
         self.tokens = tokens
         self.tokenIndex = 0
         self.operators = [
+            ('.', 'n', 9, 'left',  'binary', lambda a, b: None ),
             ('(', ')', 8, 'left',  'member' ),
             ('[', ']', 8, 'left',  'member' ),
             ('+', 'n', 7, 'right', 'prefix',  lambda a: a),
