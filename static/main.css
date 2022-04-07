@@ -118,7 +118,7 @@ body {
     justify-content: center;
     align-items: center;
     cursor: pointer;
-    transition: background 0.5s;
+    transition: background 1s;
 }
 
 .run-button svg {
@@ -134,7 +134,7 @@ body {
 }
 
 .run-button:active {
-    background: red;
+    background: green;
     transition: background 0s;
 }
 
