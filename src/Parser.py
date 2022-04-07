@@ -130,6 +130,23 @@ class Parser:
         self.nextToken()
         return FunctionStatement(identifier.ident(), parameters, body)
 
+    def parseClass(self):
+        self.nextToken()
+        self.expect(self.token().ident() != None, 'Expected an identifier')
+        identifier = self.token()
+        self.nextToken()
+        self.expect(self.token().punct() == ':', 'Expected a `:`')
+        self.nextToken()
+        self.expect(self.token().indent(), 'Expected an indent at start of class body')
+        self.nextToken()
+        methods = self.parseStatementList()
+        self.expect(self.token().dedent(), 'Expected a dedent at end of class body')
+        self.nextToken()
+        for method in methods:
+            if not isinstance(method, FunctionStatement):
+                print('Class members can only be methods')
+        return ClassStatement(identifier.ident(), methods)
+
     def parseExpressionStatement(self):
         return ExpressionStatement(self.parseExpression())
 
@@ -149,6 +166,8 @@ class Parser:
             return self.parseFunction()
         elif token.ident() == 'return':
             return self.parseReturn()
+        elif token.ident() == 'class':
+            return self.parseClass()
         elif token.dedent():
             raise DedentException()
         elif token.ident() != None: # Could be an assignment

@@ -29,3 +29,8 @@ class FunctionStatement(Statement):
         self.identifier = identifier
         self.parameters = parameters
         self.body = body
+
+class ClassStatement(Statement):
+    def __init__(self, identifier, methods):
+        self.identifier = identifier
+        self.methods = methods
