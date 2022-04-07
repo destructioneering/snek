@@ -73,3 +73,7 @@ class NoneValue(Value):
 
     def compareTo(self, value):
         return isinstance(value, NoneValue)
+
+class BuiltinValue(Value):
+    def __init__(self, function):
+        self.function = function

@@ -96,6 +96,9 @@ class Evaluator:
             elif isinstance(function, FunctionValue) or isinstance(function, LambdaValue):
                 arguments = [self.evalExpression(scope, x) for x in expression.parameters]
                 return self.garbageCollector.getObject(function.gcReference).apply(arguments)
+            elif isinstance(function, BuiltinValue):
+                arguments = [self.evalExpression(scope, x) for x in expression.parameters]
+                return function.function(arguments)
             else:
                 print(f"error: {function}")
         elif isinstance(expression, LambdaExpression):
