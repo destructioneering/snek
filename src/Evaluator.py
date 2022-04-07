@@ -98,7 +98,7 @@ class Evaluator:
                         self.evalStatement(scope, s)
                 else:
                     self.evalStatement(scope, statement.otherwise)
-        if isinstance(statement, WhileStatement):
+        elif isinstance(statement, WhileStatement):
             while self.evalExpression(scope, statement.condition).boolean == True:
                 newscope = Scope(scope)
                 for s in statement.body:
