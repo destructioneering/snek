@@ -32,7 +32,9 @@
               <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-play"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
             </div>
           </div>
-          <div id="editor" class="editor">print('Hello, world!')</div>
+          <div id="editor" class="editor">print('Hello, world!')
+
+print(2 + 2)</div>
         </div>
         <div class="right-container">
           <div class="tab-container">
@@ -41,7 +43,7 @@
             <div class="tab help-button">Help</div>
           </div>
           <div class="tab-content-container">
-            <div class="console-output-tab" style="display: block" >foo bar baz</div>
+            <div class="console-output-tab" style="display: block" ></div>
             <div class="gc-events-tab">bar</div>
             <div class="help-tab">baz</div>
           </div>
@@ -49,14 +51,54 @@
       </div>
     </div>
 
+    <script type="text/python">
+      from browser import document, window, html
+      from io import StringIO
+      import sys
+
+      from Lexer import Lexer
+      from Parser import Parser
+      from Evaluator import Evaluator
+
+      def handleCode(text):
+          lexer = Lexer(text)
+          lexer.tokenize()
+
+          parser = Parser(lexer.tokens)
+          parser.parse()
+
+          old_stdout = sys.stdout
+          sys.stdout = mystdout = StringIO()
+
+          evaluator = Evaluator()
+          for statement in parser.statements:
+              evaluator.eval(statement)
+
+          sys.stdout = old_stdout
+          output = mystdout.getvalue()
+          outputElement = document.select('.console-output-tab')[0]
+
+          outputElement.clear()
+
+          for i, line in enumerate(output.splitlines()):
+              container = html.DIV('', Class="output-line-container")
+              outputElement <= container
+              container <= html.DIV(i, Class="line-number")
+              container <= html.DIV(line, Class="output-line")
+
+      window.handleCode = handleCode
+    </script>
     <script>
       $(document).ready(function() {
-
           // Set up the editor.
           var editor = ace.edit("editor");
           var PythonMode = ace.require("ace/mode/python").Mode;
           editor.session.setMode(new PythonMode());
           editor.setTheme("ace/theme/solarized_light");
+
+          $('.run-button').click(function() {
+              window.handleCode(editor.getValue());
+          });
 
           // Set up the tabs.
           $('.console-button').click(function() {
@@ -86,22 +128,6 @@
               $(this).addClass('button-pressed');
           });
       });
-    </script>
-    <script type="text/python">
-      from browser import document
-      from Lexer import Lexer
-      from Parser import Parser
-      from Evaluator import Evaluator
-
-      lexer = Lexer("print('hello, world!')")
-      lexer.tokenize()
-
-      parser = Parser(lexer.tokens)
-      parser.parse()
-
-      evaluator = Evaluator()
-      for statement in parser.statements:
-          evaluator.eval(statement)
     </script>
   </body>
 </html>

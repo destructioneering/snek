@@ -6,7 +6,7 @@ from Parser import Parser
 from Evaluator import Evaluator
 
 if __name__ == '__main__':
-    lexer = Lexer("print('Hello, world!')")
+    lexer = Lexer(sys.stdin.read())
     lexer.tokenize()
     # lexer.dump()
     parser = Parser(lexer.tokens)

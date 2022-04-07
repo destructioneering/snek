@@ -166,3 +166,23 @@ body {
     height: 100%;
     overflow: scroll;
 }
+
+.output-line-container {
+    display: flex;
+    margin-bottom: 3px;
+}
+
+.line-number {
+    width: 30px;
+    text-align: right;
+}
+
+.output-line {
+    background: #112211;
+    margin-left: 5px;
+    padding: 0 10px;
+}
+
+.output-line:hover {
+    background: #114411;
+}
