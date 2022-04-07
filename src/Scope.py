@@ -12,3 +12,8 @@ class Scope:
         if self.parent:
             return self.parent.getVariable(identifier)
         return None
+
+    def copy(self):
+        scope = Scope(self.parent)
+        scope.variables = self.variables.copy()
+        return scope

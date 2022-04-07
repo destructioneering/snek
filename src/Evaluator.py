@@ -60,9 +60,7 @@ class Evaluator:
         elif isinstance(expression, FunctionCallExpression):
             function = self.evalExpression(scope, expression.left)
             if isinstance(function, ClassConstructorValue):
-                newscope = self.garbageCollector.getObject(function.gcReference).scope
-                # This should be a shallow copy; that's intentional.
-                newscope.variables = newscope.variables.copy()
+                newscope = self.garbageCollector.getObject(function.gcReference).scope.copy()
                 obj = ClassObject(newscope)
                 val = ClassValue(self.garbageCollector, self.garbageCollector.allocate(obj))
                 if '__init__' in newscope.variables:
