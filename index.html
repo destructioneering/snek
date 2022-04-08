@@ -97,7 +97,10 @@
           editor.setTheme("ace/theme/solarized_light");
 
           $('.run-button').click(function() {
-              window.handleCode(editor.getValue());
+              $('.console-output-tab').html('<div class="spinner-container"><div class="lds-spinner"><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div></div></div>');
+              setTimeout(function() {
+                  window.handleCode(editor.getValue());
+              }, 100);
           });
 
           // Set up the tabs.
