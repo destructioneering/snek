@@ -13,6 +13,7 @@ class Lexer:
             ['NUM', r'\d+', None],
             ['IDENT', r'\w+', None]
         ]
+
         for word in self.words:
             word[2] = re.compile(word[1])
 
@@ -21,11 +22,14 @@ class Lexer:
         # all regular expressions, so we have to be careful about what
         # kinds of tokens we support.
         self.mainRegex = ''
+
         for i, word in enumerate(self.words):
             if i == 0:
                 self.mainRegex = '(?:{})'.format(word[1])
             self.mainRegex += '|(?:{})'.format(word[1])
+
         self.mainRegex = re.compile(self.mainRegex)
+        self.commentRegex = re.compile(r'^\s*#')
 
     def countIndentation(self, line):
         indent_regex = re.compile(r'^\s+')
@@ -51,7 +55,7 @@ class Lexer:
             line = line.rstrip()
 
             if len(line) == 0: continue
-            if len(line) > 0 and line[0] == '#': continue
+            if self.commentRegex.match(line): continue
 
             newIndentation = self.countIndentation(line)
             for i in range(abs(newIndentation - oldIndentation)):
