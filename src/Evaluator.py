@@ -13,9 +13,9 @@ def printBuiltin(args):
 
 class Evaluator:
     def __init__(self):
-        self.globalScope = Scope(None)
+        self.gc = GarbageCollector()
+        self.globalScope = Scope(self.gc, None)
         self.globalScope.setVariable('print', BuiltinValue(printBuiltin))
-        self.garbageCollector = GarbageCollector()
 
     def error(self, errorMessage):
         print(f"Runtime error: {errorMessage}")
@@ -24,11 +24,11 @@ class Evaluator:
         if isinstance(expression, BinaryExpression) and expression.operator == '.':
             left = self.getScopeFromExpression(scope, expression.left)
             right = self.evalExpression(left, expression.right)
-            return self.garbageCollector.getObject(right.gcReference).scope
+            return self.gc.getObject(right.gcReference).scope
         else:
             if isinstance(expression, IdentifierExpression):
                 val = scope.getVariable(expression.identifier)
-                return self.garbageCollector.getObject(val.gcReference).scope
+                return self.gc.getObject(val.gcReference).scope
             else:
                 print('error')
 
@@ -71,10 +71,10 @@ class Evaluator:
                 left = self.evalExpression(scope, expression.left)
                 if not isinstance(left, ClassValue): print('error')
                 identifier = expression.right.identifier
-                classObject = self.garbageCollector.getObject(left.gcReference)
+                classObject = self.gc.getObject(left.gcReference)
                 right = classObject.scope.getVariable(identifier)
                 if isinstance(right, FunctionValue):
-                    return MethodValue(left, right)
+                    return MethodValue(left, right.gcReference)
                 else:
                     return right
             else:
@@ -87,29 +87,29 @@ class Evaluator:
         elif isinstance(expression, FunctionCallExpression):
             function = self.evalExpression(scope, expression.left)
             if isinstance(function, ClassConstructorValue):
-                newscope = self.garbageCollector.getObject(function.gcReference).scope.copy()
-                obj = ClassObject(newscope)
-                val = ClassValue(self.garbageCollector, self.garbageCollector.allocate(obj))
+                newscope = self.gc.getObject(function.gcReference).scope.copy()
+                obj = ClassObject(self.gc, newscope)
+                val = ClassValue(self.gc, self.gc.allocate(obj))
                 if '__init__' in newscope.variables:
                     constructor = newscope.variables['__init__']
                     arguments = [self.evalExpression(scope, x) for x in expression.parameters]
-                    self.garbageCollector.getObject(constructor.gcReference).apply([val] + arguments)
+                    self.gc.getObject(constructor.gcReference).apply([val] + arguments)
                 return val
             elif isinstance(function, MethodValue):
                 classValue = function.classValue
                 arguments = [self.evalExpression(scope, x) for x in expression.parameters]
-                return self.garbageCollector.getObject(function.functionValue.gcReference).apply([classValue] + arguments)
+                return self.gc.getObject(function.gcReference).apply([classValue] + arguments)
             elif isinstance(function, FunctionValue) or isinstance(function, LambdaValue):
                 arguments = [self.evalExpression(scope, x) for x in expression.parameters]
-                return self.garbageCollector.getObject(function.gcReference).apply(arguments)
+                return self.gc.getObject(function.gcReference).apply(arguments)
             elif isinstance(function, BuiltinValue):
                 arguments = [self.evalExpression(scope, x) for x in expression.parameters]
                 return function.function(arguments)
             else:
                 print(f"error: {function}")
         elif isinstance(expression, LambdaExpression):
-            obj = LambdaObject(scope, expression.parameters, expression.body, self)
-            lambdaValue = LambdaValue(self.garbageCollector.allocate(obj))
+            obj = LambdaObject(self.gc, scope, expression.parameters, expression.body, self)
+            lambdaValue = LambdaValue(self.gc.allocate(obj))
             return lambdaValue
         elif isinstance(expression, NoneExpression):
             return NoneValue()
@@ -119,9 +119,10 @@ class Evaluator:
     def evalStatement(self, scope, statement):
         if isinstance(statement, IfStatement):
             if self.evalExpression(scope, statement.condition).boolean == True:
-                newscope = Scope(scope)
+                newscope = Scope(self.gc, scope)
                 for s in statement.body:
                     self.evalStatement(newscope, s)
+                newscope.delete()
             elif statement.otherwise != None:
                 if isinstance(statement.otherwise, list):
                     for s in statement.otherwise:
@@ -130,9 +131,10 @@ class Evaluator:
                     self.evalStatement(scope, statement.otherwise)
         elif isinstance(statement, WhileStatement):
             while self.evalExpression(scope, statement.condition).boolean == True:
-                newscope = Scope(scope)
+                newscope = Scope(self.gc, scope)
                 for s in statement.body:
                     self.evalStatement(newscope, s)
+                newscope.delete()
         elif isinstance(statement, PrintStatement):
             self.evalExpression(scope, statement.expression).print()
         elif isinstance(statement, ReturnStatement):
@@ -140,15 +142,15 @@ class Evaluator:
         elif isinstance(statement, ExpressionStatement):
             self.evalExpression(scope, statement.expression)
         elif isinstance(statement, FunctionStatement):
-            obj = FunctionObject(scope, statement.parameters, statement.body, self)
-            functionValue = FunctionValue(self.garbageCollector.allocate(obj))
+            obj = FunctionObject(self.gc, scope, statement.parameters, statement.body, self)
+            functionValue = FunctionValue(self.gc.allocate(obj))
             scope.setVariable(statement.identifier, functionValue)
         elif isinstance(statement, ClassStatement):
-            newscope = Scope(scope)
+            newscope = Scope(self.gc, scope)
             for stmt in statement.body:
                 self.evalStatement(newscope, stmt)
-            obj = ClassConstructorObject(newscope)
-            val = ClassConstructorValue(self.garbageCollector.allocate(obj))
+            obj = ClassConstructorObject(self.gc, newscope)
+            val = ClassConstructorValue(self.gc.allocate(obj))
             scope.setVariable(statement.identifier, val)
         else:
             print(f"Invalid statement {statement}")

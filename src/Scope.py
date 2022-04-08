@@ -1,7 +1,8 @@
 class Scope:
-    def __init__(self, parent):
+    def __init__(self, gc, parent):
         self.parent = parent
         self.variables = {}
+        self.gc = gc
 
     def setVariable(self, identifier, value):
         tmp = self
@@ -20,6 +21,11 @@ class Scope:
         return None
 
     def copy(self):
-        scope = Scope(self.parent)
+        scope = Scope(self.gc, self.parent)
         scope.variables = self.variables.copy()
         return scope
+
+    def delete(self):
+        for k, v in self.variables:
+            if isinstance(v, ReferenceValue):
+                self.gc.getObject(v.gcReference).delete()

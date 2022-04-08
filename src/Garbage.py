@@ -8,5 +8,16 @@ class GarbageCollector:
         self.objectIndex += 1
         return self.objectIndex - 1
 
-    def getObject(self, index):
-        return self.objects[index]
+    def delete(self, idx):
+        pass
+
+    def getObject(self, idx):
+        return self.objects[idx]
+
+class ReferenceCounter(GarbageCollector):
+    def delete(self, idx):
+        self.objects[idx].referenceCount -= 1
+
+        if self.objects[idx].referenceCount == 0:
+            self.objects[idx].delete()
+            # idx is now free to reassign.

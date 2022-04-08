@@ -2,6 +2,9 @@ class Value:
     def __init__(self, gc):
         self.gc = gc
 
+class ReferenceValue(Value):
+    pass
+
 class StringValue(Value):
     def __init__(self, string):
         self.string = string
@@ -35,19 +38,19 @@ class BooleanValue(Value):
         if not isinstance(value, BooleanValue): return False
         return self.boolean == value.boolean
 
-class FunctionValue(Value):
+class FunctionValue(ReferenceValue):
     def __init__(self, gcReference):
         self.gcReference = gcReference
 
-class LambdaValue(Value):
+class LambdaValue(ReferenceValue):
     def __init__(self, gcReference):
         self.gcReference = gcReference
 
-class ClassConstructorValue(Value):
+class ClassConstructorValue(ReferenceValue):
     def __init__(self, gcReference):
         self.gcReference = gcReference
 
-class ClassValue(Value):
+class ClassValue(ReferenceValue):
     def __init__(self, gc, gcReference):
         super().__init__(gc)
         self.gcReference = gcReference
@@ -59,10 +62,10 @@ class ClassValue(Value):
         if not isinstance(value, ClassValue): return False
         return self.gcReference == value.gcReference
 
-class MethodValue(Value):
-    def __init__(self, classValue, functionValue):
+class MethodValue(ReferenceValue):
+    def __init__(self, classValue, gcReference):
         self.classValue = classValue
-        self.functionValue = functionValue
+        self.gcReference = gcReference
 
 class NoneValue(Value):
     def __init__(self):
