@@ -4,8 +4,10 @@ from ReturnException import ReturnException
 
 class Object:
     def __init__(self, gc):
-        self.referenceCount = 0
         self.gc = gc
+
+        # Reference counter
+        self.referenceCount = 0
 
 class FunctionObject(Object):
     def __init__(self, gc, scope, parameters, body, evaluator):
@@ -15,9 +17,8 @@ class FunctionObject(Object):
         self.body = body
         self.evaluator = evaluator
 
-    def delete(self, gc):
-        for statement in self.body:
-            gc.delete(statement)
+    def delete(self):
+        pass
 
     def apply(self, arguments):
         if len(self.parameters) != len(arguments):
@@ -46,11 +47,8 @@ class LambdaObject(Object):
         self.body = body
         self.evaluator = evaluator
 
-    def delete(self, gc):
-        for k, v in self.scope.variables:
-            gc.delete(v)
-        for statement in self.body:
-            gc.delete(statement)
+    def delete(self):
+        self.scope.delete()
 
     def apply(self, arguments):
         if len(self.parameters) != len(arguments):
@@ -65,7 +63,13 @@ class ClassConstructorObject(Object):
         super().__init__(gc)
         self.scope = scope
 
+    def delete(self):
+        self.scope.delete()
+
 class ClassObject(Object):
     def __init__(self, gc, scope):
         super().__init__(gc)
         self.scope = scope
+
+    def delete(self):
+        self.scope.delete()

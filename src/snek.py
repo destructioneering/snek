@@ -15,3 +15,4 @@ if __name__ == '__main__':
     evaluator = Evaluator()
     for statement in parser.statements:
         evaluator.eval(statement)
+    evaluator.cleanUp()

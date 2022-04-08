@@ -17,6 +17,9 @@ class Evaluator:
         self.globalScope = Scope(self.gc, None)
         self.globalScope.setVariable('print', BuiltinValue(printBuiltin))
 
+    def cleanUp(self):
+        self.globalScope.delete()
+
     def error(self, errorMessage):
         print(f"Runtime error: {errorMessage}")
 
@@ -90,6 +93,7 @@ class Evaluator:
                 newscope = self.gc.getObject(function.gcReference).scope.copy()
                 obj = ClassObject(self.gc, newscope)
                 val = ClassValue(self.gc, self.gc.allocate(obj))
+                scope.addObject(val.gcReference)
                 if '__init__' in newscope.variables:
                     constructor = newscope.variables['__init__']
                     arguments = [self.evalExpression(scope, x) for x in expression.parameters]
@@ -110,6 +114,7 @@ class Evaluator:
         elif isinstance(expression, LambdaExpression):
             obj = LambdaObject(self.gc, scope, expression.parameters, expression.body, self)
             lambdaValue = LambdaValue(self.gc.allocate(obj))
+            scope.addObject(lambdaValue.gcReference)
             return lambdaValue
         elif isinstance(expression, NoneExpression):
             return NoneValue()

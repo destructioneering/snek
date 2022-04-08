@@ -1,8 +1,11 @@
+from Value import *
+
 class Scope:
     def __init__(self, gc, parent):
         self.parent = parent
         self.variables = {}
         self.gc = gc
+        self.objects = []
 
     def setVariable(self, identifier, value):
         tmp = self
@@ -23,9 +26,14 @@ class Scope:
     def copy(self):
         scope = Scope(self.gc, self.parent)
         scope.variables = self.variables.copy()
+        # for idx in self.objects:
+        #     self.gc.addReference(idx)
         return scope
 
     def delete(self):
-        for k, v in self.variables:
-            if isinstance(v, ReferenceValue):
-                self.gc.getObject(v.gcReference).delete()
+        for idx in self.objects:
+            self.gc.delete(idx)
+
+    def addObject(self, idx):
+        self.objects.append(idx)
+        self.gc.addReference(idx)
