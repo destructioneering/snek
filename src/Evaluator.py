@@ -3,7 +3,6 @@ from Expression import *
 from Value import *
 from Object import *
 from Garbage import GarbageCollector
-from Scope import Scope
 from ReturnException import ReturnException
 
 def printBuiltin(args):
@@ -14,11 +13,11 @@ def printBuiltin(args):
 class Evaluator:
     def __init__(self):
         self.gc = GarbageCollector()
-        self.globalScope = Scope(self.gc, None)
+        self.globalScope = ScopeValue(self.gc, self.gc.allocate(ScopeObject(self.gc, None)))
         self.globalScope.setVariable('print', BuiltinValue(printBuiltin))
 
     def cleanUp(self):
-        self.globalScope.delete()
+        self.gc.subReference(self.globalScope)
 
     def error(self, errorMessage):
         print(f"Runtime error: {errorMessage}")
@@ -91,9 +90,12 @@ class Evaluator:
             function = self.evalExpression(scope, expression.left)
             if isinstance(function, ClassConstructorValue):
                 newscope = self.gc.getObject(function.gcReference).scope.copy()
+
                 obj = ClassObject(self.gc, newscope)
                 val = ClassValue(self.gc, self.gc.allocate(obj))
-                scope.addObject(val.gcReference)
+
+                scope.setRegister(val)
+
                 if '__init__' in newscope.variables:
                     constructor = newscope.variables['__init__']
                     arguments = [self.evalExpression(scope, x) for x in expression.parameters]
@@ -112,9 +114,9 @@ class Evaluator:
             else:
                 print(f"error: {function}")
         elif isinstance(expression, LambdaExpression):
-            obj = LambdaObject(self.gc, scope, expression.parameters, expression.body, self)
+            obj = LambdaObject(self.gc, scope.copy(), expression.parameters, expression.body, self)
             lambdaValue = LambdaValue(self.gc.allocate(obj))
-            scope.addObject(lambdaValue.gcReference)
+            scope.setRegister(lambdaValue)
             return lambdaValue
         elif isinstance(expression, NoneExpression):
             return NoneValue()
@@ -124,10 +126,10 @@ class Evaluator:
     def evalStatement(self, scope, statement):
         if isinstance(statement, IfStatement):
             if self.evalExpression(scope, statement.condition).boolean == True:
-                newscope = Scope(self.gc, scope)
+                insideScope = ScopeValue(self.gc, self.gc.allocate(ScopeObject(self.gc, None)))
                 for s in statement.body:
-                    self.evalStatement(newscope, s)
-                newscope.delete()
+                    self.evalStatement(insideScope, s)
+                self.gc.delete(insideScope)
             elif statement.otherwise != None:
                 if isinstance(statement.otherwise, list):
                     for s in statement.otherwise:
@@ -136,10 +138,10 @@ class Evaluator:
                     self.evalStatement(scope, statement.otherwise)
         elif isinstance(statement, WhileStatement):
             while self.evalExpression(scope, statement.condition).boolean == True:
-                newscope = Scope(self.gc, scope)
+                insideScope = ScopeValue(self.gc, self.gc.allocate(ScopeObject(self.gc, None)))
                 for s in statement.body:
-                    self.evalStatement(newscope, s)
-                newscope.delete()
+                    self.evalStatement(insideScope, s)
+                self.gc.subReference(insideScope)
         elif isinstance(statement, PrintStatement):
             self.evalExpression(scope, statement.expression).print()
         elif isinstance(statement, ReturnStatement):
@@ -159,6 +161,8 @@ class Evaluator:
             scope.setVariable(statement.identifier, val)
         else:
             print(f"Invalid statement {statement}")
+
+        scope.clearRegisters()
 
     def eval(self, statement):
         self.evalStatement(self.globalScope, statement)

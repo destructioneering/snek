@@ -16,3 +16,4 @@ if __name__ == '__main__':
     for statement in parser.statements:
         evaluator.eval(statement)
     evaluator.cleanUp()
+    print([type(obj) for obj in evaluator.gc.objects if obj.referenceCount > 0])

@@ -1,5 +1,4 @@
 from Value import *
-from Scope import Scope
 from ReturnException import ReturnException
 
 class Object:
@@ -7,18 +6,34 @@ class Object:
         self.gc = gc
 
         # Reference counter
-        self.referenceCount = 0
+        self.referenceCount = 1
 
 class FunctionObject(Object):
     def __init__(self, gc, scope, parameters, body, evaluator):
         super().__init__(gc)
-        self.scope = scope
+        self.scope = scope.copy()
         self.parameters = parameters
         self.body = body
         self.evaluator = evaluator
 
     def delete(self):
-        pass
+        # We don't need to delete the scope because the scope wasn't
+        # copied. This function will only live until its outer scope
+        # dies unless there are other references to it... Actually, I
+        # think we do need to delete the scope:
+        #
+        # x = None
+        # def ():
+        #     y = 2
+        #     def g():
+        #         return y
+        #     x = g
+        # print(x())
+        #
+        # So basically all functions are lambdas now. In the global
+        # scope there's no difference because the global scope won't
+        # die until the program is over.
+        self.gc.subReference(self.scope)
 
     def apply(self, arguments):
         if len(self.parameters) != len(arguments):
@@ -42,21 +57,18 @@ class FunctionObject(Object):
 class LambdaObject(Object):
     def __init__(self, gc, scope, parameters, body, evaluator):
         super().__init__(gc)
-        self.scope = scope
+        self.scope = scope.copy()
         self.parameters = parameters
         self.body = body
         self.evaluator = evaluator
 
     def delete(self):
-        self.scope.delete()
+        self.gc.subReference(self.scope)
 
     def apply(self, arguments):
         if len(self.parameters) != len(arguments):
-            print('Incorrect number of arguments supplied to function')
-        newscope = Scope(self.gc, self.scope)
-        for i in range(len(arguments)):
-            newscope.setVariable(self.parameters[i], arguments[i])
-        return self.evaluator.evalExpression(newscope, self.body)
+            print('Incorrect number of arguments supplied to lambda')
+        return self.evaluator.evalExpression(self.scope, self.body)
 
 class ClassConstructorObject(Object):
     def __init__(self, gc, scope):
@@ -64,7 +76,7 @@ class ClassConstructorObject(Object):
         self.scope = scope
 
     def delete(self):
-        self.scope.delete()
+        self.gc.subReference(self.scope)
 
 class ClassObject(Object):
     def __init__(self, gc, scope):
@@ -72,4 +84,78 @@ class ClassObject(Object):
         self.scope = scope
 
     def delete(self):
-        self.scope.delete()
+        self.gc.subReference(self.scope)
+
+class ScopeObject(Object):
+    def __init__(self, gc, parent):
+        super().__init__(gc)
+        self.parent = parent
+        self.variables = {}
+        self.registers = []
+
+    def setVariable(self, identifier, value):
+        oldValue = self.getVariable(identifier)
+
+        if oldValue != None:
+            #print(f"Variable re-assignment: {identifier}")
+            self.gc.subReference(oldValue)
+
+        # When a variable is set to an object then the object
+        # shouldn't die while that variable is referencing it.
+        self.gc.addReference(value)
+
+        scope = self
+
+        # Walk up the linked list to see if the variable already
+        # exists.
+        while scope != None:
+            if identifier in scope.variables:
+                scope.variables[identifier] = value
+                return
+            scope = scope.parent
+
+        # If the variable doesn't exist in any scope then it's a new
+        # variable we should add to the current scope.
+        self.variables[identifier] = value
+
+    def getVariable(self, identifier):
+        if identifier in self.variables:
+            return self.variables[identifier]
+        if self.parent:
+            return self.parent.getVariable(identifier)
+        return None
+
+    def copy(self):
+        scope = Scope(self.gc, self.parent)
+        scope.variables = self.variables.copy()
+
+        for variableName, variableValue in scope.variables.items():
+            # When the scope is copied (which is probably for a lambda
+            # expression), it would be a shame if the objects in it
+            # suddenly disappeared. A scope in that sense is kind of
+            # an object itself. In any case, the objects have a new
+            # reference in the new scope.
+            self.gc.addReference(variableValue)
+
+        self.gc.addReference(self.parent)
+
+        # The registers aren't copied because they contain information
+        # that's only relevent to a specific scope and doesn't affect
+        # evaluation.
+
+        return scope
+
+    def delete(self):
+        self.clearRegisters()
+        for variableName, variableValue in self.variables.items():
+            self.gc.subReference(variableValue)
+
+    def setRegister(self, value):
+        if isinstance(value, ReferenceValue):
+            self.gc.addReference(value)
+            self.registers.append(value)
+
+    def clearRegisters(self):
+        for value in self.registers:
+            self.gc.subReference(value)
+        self.registers = []
