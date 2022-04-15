@@ -75,23 +75,20 @@ class MethodValue(ReferenceValue):
 class ScopeValue(ReferenceValue):
     def __init__(self, gc, gcReference):
         super().__init__(gc)
+        self.scope = gc.getObject(gcReference)
         self.gcReference = gcReference
 
     def setVariable(self, identifier, value):
-        scope = self.gc.getObject(self.gcReference)
-        scope.setVariable(identifier, value)
+        self.scope.setVariable(identifier, value)
 
     def getVariable(self, identifier):
-        scope = self.gc.getObject(self.gcReference)
-        return scope.getVariable(identifier)
+        return self.scope.getVariable(identifier)
 
     def copy(self):
-        scope = self.gc.getObject(self.gcReference)
-        scope.copy()
+        return self.scope.copy()
 
     def clearRegisters(self):
-        scope = self.gc.getObject(self.gcReference)
-        scope.clearRegisters()
+        self.scope.clearRegisters()
 
 class NoneValue(Value):
     def __init__(self):

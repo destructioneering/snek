@@ -1,11 +1,13 @@
 #!/usr/bin/env python3
 
-import sys
+import logging, sys
 from Lexer import Lexer
 from Parser import Parser
 from Evaluator import Evaluator
 
 if __name__ == '__main__':
+    logging.basicConfig(stream=sys.stderr, level=logging.DEBUG)
+
     lexer = Lexer(sys.stdin.read())
     lexer.tokenize()
     # lexer.dump()
@@ -16,4 +18,9 @@ if __name__ == '__main__':
     for statement in parser.statements:
         evaluator.eval(statement)
     evaluator.cleanUp()
-    print([type(obj) for obj in evaluator.gc.objects if obj.referenceCount > 0])
+
+    logging.info('The following objects remain:')
+
+    for obj in evaluator.gc.objects:
+        if obj.referenceCount < 1: continue
+        logging.info(obj)

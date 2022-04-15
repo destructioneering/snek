@@ -1,3 +1,5 @@
+import logging
+
 from Value import *
 
 class ReferenceCounter:
@@ -5,11 +7,12 @@ class ReferenceCounter:
     # referenceCount has hit zero. That would mean that the object is
     # still being referenced by some system that thinks it's alive
     # after the object was marked dead. Very bad.
-    def delete(self, gc, idx):
+    def subReference(self, gc, idx):
+        logging.debug('-- %s', gc.p(idx))
         gc.objects[idx].referenceCount -= 1
 
         if gc.objects[idx].referenceCount < 0:
-            print('====================================', gc.objects[idx], gc.objects[idx].referenceCount)
+            # logging.debug('====================================', gc.objects[idx], gc.objects[idx].referenceCount)
             abort()
 
         if gc.objects[idx].referenceCount == 0:
@@ -24,8 +27,13 @@ class GarbageCollector:
         self.objectIndex = 0
         self.referenceCounter = ReferenceCounter()
 
+    def p(self, idx):
+        obj = self.objects[idx]
+        return f"<object idx='{idx}' type='{type(obj)}' references='{obj.referenceCount}'>"
+
     def allocate(self, obj):
         self.objects.append(obj)
+        logging.debug('allocating %s', self.p(self.objectIndex))
         self.objectIndex += 1
         return self.objectIndex - 1
 
@@ -35,9 +43,10 @@ class GarbageCollector:
     def subReference(self, value, varname="no variable"):
         if not isinstance(value, ReferenceValue):
             return
-        self.referenceCounter.delete(self, value.gcReference)
+        self.referenceCounter.subReference(self, value.gcReference)
 
     def addReference(self, value):
         if not isinstance(value, ReferenceValue):
             return
         self.objects[value.gcReference].referenceCount += 1
+        logging.debug('++ %s', self.p(value.gcReference))

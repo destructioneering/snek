@@ -14,6 +14,7 @@ class Evaluator:
     def __init__(self):
         self.gc = GarbageCollector()
         self.globalScope = ScopeValue(self.gc, self.gc.allocate(ScopeObject(self.gc, None)))
+        self.gc.addReference(self.globalScope)
         self.globalScope.setVariable('print', BuiltinValue(printBuiltin))
 
     def cleanUp(self):

@@ -6,12 +6,13 @@ class Object:
         self.gc = gc
 
         # Reference counter
-        self.referenceCount = 1
+        self.referenceCount = 0
 
 class FunctionObject(Object):
     def __init__(self, gc, scope, parameters, body, evaluator):
         super().__init__(gc)
         self.scope = scope.copy()
+        self.gc.addReference(self.scope)
         self.parameters = parameters
         self.body = body
         self.evaluator = evaluator
@@ -38,7 +39,9 @@ class FunctionObject(Object):
     def apply(self, arguments):
         if len(self.parameters) != len(arguments):
             print('Incorrect number of arguments supplied to function')
-        newscope = Scope(self.gc, self.scope)
+
+        newscope = ScopeValue(self.gc, self.gc.allocate(ScopeObject(self.gc, self.scope)))
+
         for i in range(len(arguments)):
             newscope.setVariable(self.parameters[i], arguments[i])
 
@@ -46,7 +49,10 @@ class FunctionObject(Object):
             try:
                 self.evaluator.evalStatement(newscope, statement)
             except ReturnException as e:
+                self.gc.subReference(newscope)
                 return e.value
+
+        self.gc.subReference(newscope)
 
         return NoneValue()
 
@@ -89,7 +95,8 @@ class ClassObject(Object):
 class ScopeObject(Object):
     def __init__(self, gc, parent):
         super().__init__(gc)
-        self.parent = parent
+        self.parent = gc.getObject(parent.gcReference) if parent != None else None
+        self.gc.addReference(parent)
         self.variables = {}
         self.registers = []
 
@@ -121,23 +128,20 @@ class ScopeObject(Object):
     def getVariable(self, identifier):
         if identifier in self.variables:
             return self.variables[identifier]
-        if self.parent:
+        if self.parent != None:
             return self.parent.getVariable(identifier)
         return None
 
     def copy(self):
-        scope = Scope(self.gc, self.parent)
-        scope.variables = self.variables.copy()
+        scope = ScopeValue(self.gc, self.gc.allocate(ScopeObject(self.gc, self.parent)))
 
-        for variableName, variableValue in scope.variables.items():
+        for variableName, variableValue in self.variables.items():
             # When the scope is copied (which is probably for a lambda
             # expression), it would be a shame if the objects in it
             # suddenly disappeared. A scope in that sense is kind of
             # an object itself. In any case, the objects have a new
             # reference in the new scope.
-            self.gc.addReference(variableValue)
-
-        self.gc.addReference(self.parent)
+            scope.setVariable(variableName, variableValue)
 
         # The registers aren't copied because they contain information
         # that's only relevent to a specific scope and doesn't affect
@@ -147,6 +151,7 @@ class ScopeObject(Object):
 
     def delete(self):
         self.clearRegisters()
+        self.gc.subReference(self.parent)
         for variableName, variableValue in self.variables.items():
             self.gc.subReference(variableValue)
 
