@@ -150,7 +150,6 @@ class ClassObject(Object):
         result = super().render_graph()
         if self.scope.scope.alive():
             result += f"{self.idx} -> {self.scope.gcReference} [label=\"<SCOPE>\"];\n"
-            result += self.scope.scope.render_graph()
         return result
 
     def delete(self):

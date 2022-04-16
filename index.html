@@ -54,6 +54,14 @@
       </div>
     </div>
 
+    <script>
+      function handleEventItemClicked(event) {
+          $('.event-container').hide();
+          $(event.target).closest('.event-item-container').find('.event-container').show();
+          console.log(event.target);
+      }
+    </script>
+
     <script type="text/python">
       from browser import document, window, html
       from io import StringIO
@@ -99,9 +107,13 @@
           for i, event in enumerate(evaluator.events):
               if event['type'] == 'graph':
                   def DoThing(element):
-                     eventsElement <= html.DIV(element, Class="event-container")
+                     itemContainer = html.DIV(html.DIV('Event (graph)'), Class="event-item-container")
+                     itemContainer.bind('click', window.handleEventItemClicked)
+                     eventsElement <= itemContainer
+                     itemContainer <= html.DIV(element, Class="event-container")
                   viz.renderImageElement(event['data']).then(DoThing)
                   #eventsElement <= html.DIV(event['data'])
+
       window.handleCode = handleCode
     </script>
     <script>
