@@ -33,7 +33,7 @@ class FunctionObject(Object):
     def render_graph(self):
         if not self.alive(): return ''
         result = super().render_graph()
-        if self.scope.scope.alive(): result += f"{self.idx} -> {self.scope.scope.idx};\n"
+        if self.scope.scope.alive(): result += f"{self.idx} -> {self.scope.scope.idx} [label=\"<SCOPE>\"];\n"
         return result
 
     def delete(self):
@@ -85,13 +85,20 @@ class FunctionObject(Object):
 class LambdaObject(Object):
     def __init__(self, gc, scope, parameters, body, evaluator):
         super().__init__(gc)
-        self.scope = scope.copy()
-        # print(self.scope.scope.variables)
+        # Can't copy the scope because variables assigned to the
+        # enclosing in the future wouldn't be accessible inside the
+        # function.
+        self.scope = ScopeValue(gc, gc.allocate(ScopeObject(gc, scope)))
         self.gc.addReference(self.scope)
-        logging.debug(gc.objects[self.scope.gcReference].referenceCount)
         self.parameters = parameters
         self.body = body
         self.evaluator = evaluator
+
+    def render_graph(self):
+        if not self.alive(): return ''
+        result = super().render_graph()
+        if self.scope.scope.alive(): result += f"{self.idx} -> {self.scope.scope.idx} [label=\"<SCOPE>\"];\n"
+        return result
 
     def delete(self):
         self.gc.subReference(self.scope)
@@ -126,7 +133,7 @@ class ClassConstructorObject(Object):
     def render_graph(self):
         if not self.alive(): return ''
         result = super().render_graph()
-        if self.scope.scope.alive(): result += f"{self.idx} -> {self.scope.gcReference} [label=\"scope\"];\n"
+        if self.scope.scope.alive(): result += f"{self.idx} -> {self.scope.gcReference} [label=\"<SCOPE>\"];\n"
         return result
 
     def delete(self):
@@ -141,7 +148,7 @@ class ClassObject(Object):
     def render_graph(self):
         if not self.alive(): return ''
         result = super().render_graph()
-        if self.scope.scope.alive(): result += f"{self.idx} -> {self.scope.gcReference} [label=\"scope\"];\n"
+        if self.scope.scope.alive(): result += f"{self.idx} -> {self.scope.gcReference} [label=\"<SCOPE>\"];\n"
         return result
 
     def delete(self):
@@ -164,10 +171,12 @@ class ScopeObject(Object):
         if not self.alive(): return ''
         result = super().render_graph()
         if self.parent:
-            result += f"{self.idx} -> {self.parent.idx} [label=\"parent\"];\n"
+            result += f"{self.idx} -> {self.parent.idx} [label=\"<PARENT>\"];\n"
         for identifier, value in self.variables.items():
-            if not isinstance(value, ReferenceValue): continue
-            result += f"{self.idx} -> {value.gcReference} [label=\"{identifier}\"];\n"
+            if isinstance(value, ReferenceValue):
+                result += f"{self.idx} -> {value.gcReference} [label=\"{identifier}\"];\n"
+            else:
+                result += f"{self.idx} -> {type(value).__name__[0:-5]} [label=\"{identifier}\"];\n"
         for idx, obj in enumerate(self.registers):
             if not isinstance(value, ReferenceValue): continue
             result += f"{self.idx} -> {obj.idx} [label=\"register[{idx}]\"];\n"

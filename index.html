@@ -12,6 +12,11 @@
     <script src="/static/theme-solarized_light.js" type="text/javascript" charset="utf-8"></script>
     <script src="//code.jquery.com/jquery-3.6.0.js"></script>
     <script src="//code.jquery.com/ui/1.13.1/jquery-ui.js"></script>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/viz.js/2.1.2/viz.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/viz.js/2.1.2/full.render.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/viz.js/2.1.2/lite.render.js"></script>
+
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Fenix&family=Inder&family=Montserrat&family=Roboto&display=swap" rel="stylesheet">
@@ -48,6 +53,22 @@
         </div>
       </div>
     </div>
+
+    <script>
+      var viz = new Viz();
+
+      viz.renderSVGElement('digraph { a -> b }')
+    .then(function(element) {
+        document.body.appendChild(element);
+    })
+    .catch(error => {
+        // Create a new Viz instance (@see Caveats page for more info)
+        viz = new Viz();
+
+        // Possibly display the error
+        console.error(error);
+    });
+    </script>
 
     <script type="text/python">
       from browser import document, window, html
