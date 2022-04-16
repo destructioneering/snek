@@ -1,6 +1,7 @@
 import logging
 
 from Value import *
+from Object import *
 
 class ReferenceCounter:
     # This should never be called on an object after the
@@ -8,14 +9,15 @@ class ReferenceCounter:
     # still being referenced by some system that thinks it's alive
     # after the object was marked dead. Very bad.
     def subReference(self, gc, idx):
-        logging.debug('-- %s', gc.p(idx))
         gc.objects[idx].referenceCount -= 1
+        logging.debug('-- %s', gc.p(idx))
 
         if gc.objects[idx].referenceCount < 0:
             # logging.debug('====================================', gc.objects[idx], gc.objects[idx].referenceCount)
             abort()
 
         if gc.objects[idx].referenceCount == 0:
+            logging.debug('object dying: %s', gc.p(idx))
             gc.objects[idx].delete()
             #gc.objects[idx] = None
             # idx is now free to reassign.
@@ -34,6 +36,7 @@ class GarbageCollector:
     def allocate(self, obj):
         self.objects.append(obj)
         logging.debug('allocating %s', self.p(self.objectIndex))
+        obj.idx = self.objectIndex
         self.objectIndex += 1
         return self.objectIndex - 1
 
@@ -41,12 +44,15 @@ class GarbageCollector:
         return self.objects[idx]
 
     def subReference(self, value, varname="no variable"):
-        if not isinstance(value, ReferenceValue):
-            return
-        self.referenceCounter.subReference(self, value.gcReference)
+        if isinstance(value, ReferenceValue):
+            self.referenceCounter.subReference(self, value.gcReference)
+        if isinstance(value, Object):
+            self.referenceCounter.subReference(self, value.idx)
 
     def addReference(self, value):
-        if not isinstance(value, ReferenceValue):
-            return
-        self.objects[value.gcReference].referenceCount += 1
-        logging.debug('++ %s', self.p(value.gcReference))
+        if isinstance(value, ReferenceValue):
+            self.objects[value.gcReference].referenceCount += 1
+            logging.debug('++ %s', self.p(value.gcReference))
+        if isinstance(value, Object):
+            self.objects[value.idx].referenceCount += 1
+            logging.debug('++ %s', self.p(value.gcReference))

@@ -1,3 +1,5 @@
+import logging
+
 from Value import *
 from ReturnException import ReturnException
 
@@ -11,7 +13,10 @@ class Object:
 class FunctionObject(Object):
     def __init__(self, gc, scope, parameters, body, evaluator):
         super().__init__(gc)
-        self.scope = scope.copy()
+        # Can't copy the scope because variables assigned to the
+        # enclosing in the future wouldn't be accessible inside the
+        # function.
+        self.scope = ScopeValue(gc, gc.allocate(ScopeObject(gc, scope)))
         self.gc.addReference(self.scope)
         self.parameters = parameters
         self.body = body
@@ -37,10 +42,13 @@ class FunctionObject(Object):
         self.gc.subReference(self.scope)
 
     def apply(self, arguments):
+        logging.debug('Function application %s', self)
+
         if len(self.parameters) != len(arguments):
             print('Incorrect number of arguments supplied to function')
 
         newscope = ScopeValue(self.gc, self.gc.allocate(ScopeObject(self.gc, self.scope)))
+        self.gc.addReference(newscope)
 
         for i in range(len(arguments)):
             newscope.setVariable(self.parameters[i], arguments[i])
@@ -64,6 +72,9 @@ class LambdaObject(Object):
     def __init__(self, gc, scope, parameters, body, evaluator):
         super().__init__(gc)
         self.scope = scope.copy()
+        # print(self.scope.scope.variables)
+        self.gc.addReference(self.scope)
+        logging.debug(gc.objects[self.scope.gcReference].referenceCount)
         self.parameters = parameters
         self.body = body
         self.evaluator = evaluator
@@ -71,10 +82,26 @@ class LambdaObject(Object):
     def delete(self):
         self.gc.subReference(self.scope)
 
+    # def apply(self, arguments):
+    #     if len(self.parameters) != len(arguments):
+    #         print('Incorrect number of arguments supplied to lambda')
+    #     return self.evaluator.evalExpression(self.scope, self.body)
+
     def apply(self, arguments):
+        logging.debug('Lambda application %s', self)
+
         if len(self.parameters) != len(arguments):
-            print('Incorrect number of arguments supplied to lambda')
-        return self.evaluator.evalExpression(self.scope, self.body)
+            print('Incorrect number of arguments supplied to function')
+
+        newscope = ScopeValue(self.gc, self.gc.allocate(ScopeObject(self.gc, self.scope)))
+        self.gc.addReference(newscope)
+
+        for i in range(len(arguments)):
+            newscope.setVariable(self.parameters[i], arguments[i])
+
+        val = self.evaluator.evalExpression(newscope, self.body)
+        self.gc.subReference(newscope)
+        return val
 
 class ClassConstructorObject(Object):
     def __init__(self, gc, scope):
@@ -94,9 +121,14 @@ class ClassObject(Object):
 
 class ScopeObject(Object):
     def __init__(self, gc, parent):
+        # Parent should be a ScopeValue.
         super().__init__(gc)
-        self.parent = gc.getObject(parent.gcReference) if parent != None else None
-        self.gc.addReference(parent)
+        self.parent = None
+        if isinstance(parent, Object):
+            abort()
+        if parent:
+            self.gc.addReference(parent)
+            self.parent = self.gc.getObject(parent.gcReference)
         self.variables = {}
         self.registers = []
 
@@ -133,7 +165,12 @@ class ScopeObject(Object):
         return None
 
     def copy(self):
-        scope = ScopeValue(self.gc, self.gc.allocate(ScopeObject(self.gc, self.parent)))
+        parent = None
+
+        if self.parent:
+            parent = ScopeValue(self.gc, self.parent.idx)
+
+        scope = ScopeValue(self.gc, self.gc.allocate(ScopeObject(self.gc, parent)))
 
         for variableName, variableValue in self.variables.items():
             # When the scope is copied (which is probably for a lambda
@@ -156,7 +193,7 @@ class ScopeObject(Object):
             self.gc.subReference(variableValue)
 
     def setRegister(self, value):
-        if isinstance(value, ReferenceValue):
+        if isinstance(value, ReferenceValue) or isinstance(value, Object):
             self.gc.addReference(value)
             self.registers.append(value)
 

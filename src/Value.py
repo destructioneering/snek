@@ -84,6 +84,9 @@ class ScopeValue(ReferenceValue):
     def getVariable(self, identifier):
         return self.scope.getVariable(identifier)
 
+    def setRegister(self, value):
+        self.scope.setRegister(value)
+
     def copy(self):
         return self.scope.copy()
 

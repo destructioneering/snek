@@ -1,3 +1,5 @@
+import logging
+
 from Statement import *
 from Expression import *
 from Value import *
@@ -36,6 +38,7 @@ class Evaluator:
                 print('error')
 
     def evalExpression(self, scope, expression):
+        #logging.debug('Evaluating expression %s', expression)
         if isinstance(expression, BooleanExpression):
             return BooleanValue(expression.boolean)
         elif isinstance(expression, StringExpression):
@@ -115,7 +118,7 @@ class Evaluator:
             else:
                 print(f"error: {function}")
         elif isinstance(expression, LambdaExpression):
-            obj = LambdaObject(self.gc, scope.copy(), expression.parameters, expression.body, self)
+            obj = LambdaObject(self.gc, scope, expression.parameters, expression.body, self)
             lambdaValue = LambdaValue(self.gc.allocate(obj))
             scope.setRegister(lambdaValue)
             return lambdaValue
@@ -125,23 +128,32 @@ class Evaluator:
             print(f"Invalid expression {expression}")
 
     def evalStatement(self, scope, statement):
+        logging.debug('Evaluating statement %s', statement)
         if isinstance(statement, IfStatement):
-            if self.evalExpression(scope, statement.condition).boolean == True:
-                insideScope = ScopeValue(self.gc, self.gc.allocate(ScopeObject(self.gc, None)))
-                for s in statement.body:
-                    self.evalStatement(insideScope, s)
-                self.gc.delete(insideScope)
-            elif statement.otherwise != None:
-                if isinstance(statement.otherwise, list):
-                    for s in statement.otherwise:
-                        self.evalStatement(scope, s)
-                else:
-                    self.evalStatement(scope, statement.otherwise)
+            insideScope = ScopeValue(self.gc, self.gc.allocate(ScopeObject(self.gc, scope)))
+            self.gc.addReference(insideScope)
+
+            try:
+                if self.evalExpression(scope, statement.condition).boolean == True:
+                    for s in statement.body:
+                        self.evalStatement(insideScope, s)
+                elif statement.otherwise != None:
+                    if isinstance(statement.otherwise, list):
+                        for s in statement.otherwise:
+                            self.evalStatement(insideScope, s)
+                        else:
+                            self.evalStatement(insideScope, statement.otherwise)
+            finally:
+                self.gc.subReference(insideScope)
         elif isinstance(statement, WhileStatement):
             while self.evalExpression(scope, statement.condition).boolean == True:
-                insideScope = ScopeValue(self.gc, self.gc.allocate(ScopeObject(self.gc, None)))
-                for s in statement.body:
-                    self.evalStatement(insideScope, s)
+                insideScope = ScopeValue(self.gc, self.gc.allocate(ScopeObject(self.gc, scope)))
+                self.gc.addReference(insideScope)
+                try:
+                    for s in statement.body:
+                        self.evalStatement(insideScope, s)
+                finally:
+                    self.gc.subReference(insideScope)
                 self.gc.subReference(insideScope)
         elif isinstance(statement, PrintStatement):
             self.evalExpression(scope, statement.expression).print()
@@ -154,6 +166,9 @@ class Evaluator:
             functionValue = FunctionValue(self.gc.allocate(obj))
             scope.setVariable(statement.identifier, functionValue)
         elif isinstance(statement, ClassStatement):
+            insideScope = ScopeValue(self.gc, self.gc.allocate(ScopeObject(self.gc, scope)))
+            self.gc.addReference(insideScope)
+
             newscope = Scope(self.gc, scope)
             for stmt in statement.body:
                 self.evalStatement(newscope, stmt)
