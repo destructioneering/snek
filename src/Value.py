@@ -17,6 +17,9 @@ class StringValue(Value):
     def print(self):
         print(self.string, end="")
 
+    def render_graph(self):
+        return self.string
+
     def compareTo(self, value):
         if not isinstance(value, StringValue): return False
         return self.string == value.string
@@ -28,6 +31,9 @@ class NumberValue(Value):
     def print(self):
         print(self.number, end="")
 
+    def render_graph(self):
+        return str(self.number)
+
     def compareTo(self, value):
         if not isinstance(value, NumberValue): return False
         return self.number == value.number
@@ -38,6 +44,9 @@ class BooleanValue(Value):
 
     def print(self):
         print(self.boolean, end="")
+
+    def render_graph(self):
+        return "True" if self.boolean else "False"
 
     def compareTo(self, value):
         if not isinstance(value, BooleanValue): return False
@@ -99,6 +108,9 @@ class NoneValue(Value):
 
     def print(self):
         print('None', end="")
+
+    def render_graph(self):
+        return "None"
 
     def compareTo(self, value):
         return isinstance(value, NoneValue)

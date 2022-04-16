@@ -23,11 +23,19 @@ class ReferenceCounter:
             # idx is now free to reassign.
             pass
 
+class Tracer:
+    def __init__(self):
+        pass
+
+    def trace(self, gc):
+        pass
+
 class GarbageCollector:
     def __init__(self):
         self.objects = []
         self.objectIndex = 0
         self.referenceCounter = ReferenceCounter()
+        self.tracer = Tracer()
 
     def p(self, idx):
         obj = self.objects[idx]
@@ -35,12 +43,12 @@ class GarbageCollector:
         return f"{type(obj).__name__[0:-6]}[{idx}]/{obj.referenceCount}"
 
     def render_graph(self):
-        result = 'digraph G {\n'
+        result = 'digraph {\n"" [shape=none];\n"" -> 0;\n'
+        result += self.objects[0].render_graph(0)
+        result += '}\n'
 
         for obj in self.objects:
-            result += obj.render_graph()
-
-        result += '}\n'
+            obj.visited = False
 
         return result
 

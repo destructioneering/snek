@@ -6,16 +6,23 @@ from ReturnException import ReturnException
 class Object:
     def __init__(self, gc):
         self.gc = gc
+        self.visited = False
 
         # Reference counter
         self.referenceCount = 0
 
+        # Tracer
+        self.color = 0
+
     def render_graph(self):
         if not self.alive(): return ''
-        result = f"{self.idx} [label=\"{type(self).__name__}\\nindex: {self.idx}\\nreferences: {self.referenceCount}\"];\n"
+        self.visited = True
+        color = ['pink', 'purple', 'black'][self.color]
+        result = f"{self.idx} [label=\"{type(self).__name__[0:-6]}[{self.idx}]\\nreferences: {self.referenceCount}\", fillcolor={color}, style=filled];\n"
         return result
 
     def alive(self):
+        if self.visited: return False
         return self.referenceCount > 0
 
 class FunctionObject(Object):
@@ -33,7 +40,9 @@ class FunctionObject(Object):
     def render_graph(self):
         if not self.alive(): return ''
         result = super().render_graph()
-        if self.scope.scope.alive(): result += f"{self.idx} -> {self.scope.scope.idx} [label=\"<SCOPE>\"];\n"
+        #if self.scope.scope.alive(): result += f"{self.idx} -> {self.scope.scope.idx} [label=\"<SCOPE>\"];\n"
+        if self.scope.scope.alive():
+            result += self.scope.scope.render_graph(self.idx)
         return result
 
     def delete(self):
@@ -97,7 +106,8 @@ class LambdaObject(Object):
     def render_graph(self):
         if not self.alive(): return ''
         result = super().render_graph()
-        if self.scope.scope.alive(): result += f"{self.idx} -> {self.scope.scope.idx} [label=\"<SCOPE>\"];\n"
+        if self.scope.scope.alive():
+            result += self.scope.scope.render_graph(self.idx)
         return result
 
     def delete(self):
@@ -133,7 +143,8 @@ class ClassConstructorObject(Object):
     def render_graph(self):
         if not self.alive(): return ''
         result = super().render_graph()
-        if self.scope.scope.alive(): result += f"{self.idx} -> {self.scope.gcReference} [label=\"<SCOPE>\"];\n"
+        if self.scope.scope.alive():
+            result += self.scope.scope.render_graph(self.idx)
         return result
 
     def delete(self):
@@ -149,7 +160,7 @@ class ClassObject(Object):
         if not self.alive(): return ''
         result = super().render_graph()
         if self.scope.scope.alive():
-            result += f"{self.idx} -> {self.scope.gcReference} [label=\"<SCOPE>\"];\n"
+            result += self.scope.scope.render_graph(self.idx)
         return result
 
     def delete(self):
@@ -168,21 +179,31 @@ class ScopeObject(Object):
         self.variables = {}
         self.registers = []
 
-    def render_graph(self):
+    def render_graph(self, host):
         if not self.alive(): return ''
-        result = super().render_graph()
-        if self.parent:
-            result += f"{self.idx} -> {self.parent.idx} [label=\"<PARENT>\"];\n"
+
+        result = ''
+
+        #result += super().render_graph()
+        #result += f"{host} -> {self.idx};"
+        #host = self.idx
+        # if self.parent:
+        #     result += f"{host} -> {self.parent.idx};\n"
+
         for identifier, value in self.variables.items():
+            if identifier == '__init__': continue
             if isinstance(value, ReferenceValue):
-                result += f"{self.idx} -> {value.gcReference} [label=\"{identifier}\"];\n"
-            else:
+                result += f"{host} -> {value.gcReference} [label=\"{identifier}\"];\n"
+                result += self.gc.getObject(value.gcReference).render_graph()
+            elif not isinstance(value, BuiltinValue):
                 fakename = ''.join(random.choices(string.ascii_uppercase + string.ascii_lowercase, k=5))
-                result += f"{fakename} [label=\"{type(value).__name__[0:-5]}\"];\n"
-                result += f"{self.idx} -> {fakename} [label=\"{identifier}\"];\n"
+                result += f"{fakename} [label=\"{value.render_graph()}\"];\n"
+                result += f"{host} -> {fakename} [label=\"{identifier}\"];\n"
+
         for idx, obj in enumerate(self.registers):
             if not isinstance(value, ReferenceValue): continue
-            result += f"{self.idx} -> {obj.idx} [label=\"register[{idx}]\"];\n"
+            result += f"{host} -> {obj.idx} [label=\"register[{idx}]\"];\n"
+
         return result
 
     def setVariable(self, identifier, value):

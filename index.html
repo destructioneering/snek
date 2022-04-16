@@ -115,7 +115,7 @@
           viz = Viz.new()
 
           for i, event in enumerate(evaluator.events):
-              label = html.DIV('{}. Event (graph)'.format(i + 1))
+              label = html.DIV('{}. Graph'.format(i + 1))
               itemContainer = html.DIV(label, Class="event-item-container", Id='event-{}'.format(i + 1))
               itemContainer.bind('click', window.handleEventItemClicked)
               eventsElement <= itemContainer

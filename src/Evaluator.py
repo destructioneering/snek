@@ -15,9 +15,8 @@ def printBuiltin(evaluator, args):
 def graphBuiltin(evaluator, args):
     evaluator.events.append({'type': 'graph', 'data': evaluator.gc.render_graph()})
 
-def graphObjectBuiltin(evaluator, args):
-    for arg in args:
-        evaluator.events.append({'type': 'graph', 'data': 'digraph {\n' + evaluator.gc.getObject(arg.gcReference).render_graph() + '}\n'})
+def traceBuiltin(evaluator, args):
+    evaluator.events.append({'type': 'graph', 'data': evaluator.gc.render_graph()})
 
 class Evaluator:
     def __init__(self):
@@ -26,7 +25,7 @@ class Evaluator:
         self.gc.addReference(self.globalScope)
         self.globalScope.setVariable('print', BuiltinValue(printBuiltin))
         self.globalScope.setVariable('graph', BuiltinValue(graphBuiltin))
-        self.globalScope.setVariable('graph_object', BuiltinValue(graphObjectBuiltin))
+        self.globalScope.setVariable('trace', BuiltinValue(traceBuiltin))
         self.events = []
 
     def cleanUp(self):
