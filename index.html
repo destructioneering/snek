@@ -56,8 +56,18 @@
 
     <script>
       function handleEventItemClicked(event) {
+          var element = $(event.target).closest('.event-item-container').find('.event-container');
+          var visible = element.is(':visible');
           $('.event-container').hide();
-          $(event.target).closest('.event-item-container').find('.event-container').show();
+
+          console.log(visible);
+
+          if (visible) {
+              element.hide();
+          } else {
+              element.show();
+          }
+
           console.log(event.target);
       }
     </script>
@@ -105,14 +115,18 @@
           viz = Viz.new()
 
           for i, event in enumerate(evaluator.events):
+              label = html.DIV('{}. Event (graph)'.format(i + 1))
+              itemContainer = html.DIV(label, Class="event-item-container", Id='event-{}'.format(i + 1))
+              itemContainer.bind('click', window.handleEventItemClicked)
+              eventsElement <= itemContainer
+
+              def DoThing(i):
+                  def DoInside(element):
+                      document.select('#event-{}'.format(i + 1))[0] <= html.DIV(element, Class="event-container")
+                  return DoInside
+
               if event['type'] == 'graph':
-                  def DoThing(element):
-                     itemContainer = html.DIV(html.DIV('Event (graph)'), Class="event-item-container")
-                     itemContainer.bind('click', window.handleEventItemClicked)
-                     eventsElement <= itemContainer
-                     itemContainer <= html.DIV(element, Class="event-container")
-                  viz.renderImageElement(event['data']).then(DoThing)
-                  #eventsElement <= html.DIV(event['data'])
+                  viz.renderImageElement(event['data']).then(DoThing(i))
 
       window.handleCode = handleCode
     </script>
