@@ -6,7 +6,7 @@ from Parser import Parser
 from Evaluator import Evaluator
 
 if __name__ == '__main__':
-    logging.basicConfig(stream=sys.stderr, level=logging.INFO)
+    logging.basicConfig(stream=sys.stderr, level=logging.DEBUG)
 
     lexer = Lexer(sys.stdin.read())
     lexer.tokenize()
@@ -24,3 +24,5 @@ if __name__ == '__main__':
     for idx, obj in enumerate(evaluator.gc.objects):
         if obj.referenceCount < 1: continue
         logging.info(evaluator.gc.p(idx))
+
+    print(evaluator.gc.render_graph())

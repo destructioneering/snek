@@ -10,6 +10,14 @@ class Object:
         # Reference counter
         self.referenceCount = 0
 
+    def render_graph(self):
+        if not self.alive(): return ''
+        result = f"{self.idx} [label=\"{type(self).__name__}\\nindex: {self.idx}\\nreferences: {self.referenceCount}\"];\n"
+        return result
+
+    def alive(self):
+        return self.referenceCount > 0
+
 class FunctionObject(Object):
     def __init__(self, gc, scope, parameters, body, evaluator):
         super().__init__(gc)
@@ -21,6 +29,12 @@ class FunctionObject(Object):
         self.parameters = parameters
         self.body = body
         self.evaluator = evaluator
+
+    def render_graph(self):
+        if not self.alive(): return ''
+        result = super().render_graph()
+        if self.scope.scope.alive(): result += f"{self.idx} -> {self.scope.scope.idx};\n"
+        return result
 
     def delete(self):
         # We don't need to delete the scope because the scope wasn't
@@ -106,7 +120,14 @@ class LambdaObject(Object):
 class ClassConstructorObject(Object):
     def __init__(self, gc, scope):
         super().__init__(gc)
-        self.scope = scope
+        self.scope = ScopeValue(gc, gc.allocate(ScopeObject(gc, scope)))
+        self.gc.addReference(self.scope)
+
+    def render_graph(self):
+        if not self.alive(): return ''
+        result = super().render_graph()
+        if self.scope.scope.alive(): result += f"{self.idx} -> {self.scope.gcReference} [label=\"scope\"];\n"
+        return result
 
     def delete(self):
         self.gc.subReference(self.scope)
@@ -116,6 +137,12 @@ class ClassObject(Object):
         super().__init__(gc)
         self.scope = scope
         self.gc.addReference(self.scope)
+
+    def render_graph(self):
+        if not self.alive(): return ''
+        result = super().render_graph()
+        if self.scope.scope.alive(): result += f"{self.idx} -> {self.scope.gcReference} [label=\"scope\"];\n"
+        return result
 
     def delete(self):
         self.gc.subReference(self.scope)
@@ -132,6 +159,19 @@ class ScopeObject(Object):
             self.parent = self.gc.getObject(parent.gcReference)
         self.variables = {}
         self.registers = []
+
+    def render_graph(self):
+        if not self.alive(): return ''
+        result = super().render_graph()
+        if self.parent:
+            result += f"{self.idx} -> {self.parent.idx} [label=\"parent\"];\n"
+        for identifier, value in self.variables.items():
+            if not isinstance(value, ReferenceValue): continue
+            result += f"{self.idx} -> {value.gcReference} [label=\"{identifier}\"];\n"
+        for idx, obj in enumerate(self.registers):
+            if not isinstance(value, ReferenceValue): continue
+            result += f"{self.idx} -> {obj.idx} [label=\"register[{idx}]\"];\n"
+        return result
 
     def setVariable(self, identifier, value):
         oldValue = self.getVariable(identifier)
@@ -172,7 +212,6 @@ class ScopeObject(Object):
             parent = ScopeValue(self.gc, self.parent.idx)
 
         scope = ScopeValue(self.gc, self.gc.allocate(ScopeObject(self.gc, parent)))
-        self.gc.addReference(self.parent)
 
         for variableName, variableValue in self.variables.items():
             # When the scope is copied (which is probably for a lambda

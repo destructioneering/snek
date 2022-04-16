@@ -167,13 +167,12 @@ class Evaluator:
             functionValue = FunctionValue(self.gc.allocate(obj))
             scope.setVariable(statement.identifier, functionValue)
         elif isinstance(statement, ClassStatement):
-            insideScope = ScopeValue(self.gc, self.gc.allocate(ScopeObject(self.gc, scope)))
-            self.gc.addReference(insideScope)
-            for stmt in statement.body:
-                self.evalStatement(insideScope, stmt)
-            obj = ClassConstructorObject(self.gc, insideScope)
+            obj = ClassConstructorObject(self.gc, scope)
             val = ClassConstructorValue(self.gc.allocate(obj))
             scope.setVariable(statement.identifier, val)
+            for stmt in statement.body:
+                self.evalStatement(obj.scope, stmt)
+            logging.debug('End of class body evaluation')
         else:
             print(f"Invalid statement {statement}")
 

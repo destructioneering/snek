@@ -34,6 +34,16 @@ class GarbageCollector:
         #return f"<object idx='{idx}' type='{type(obj).__name__}' references='{obj.referenceCount}'>"
         return f"{type(obj).__name__[0:-6]}[{idx}]/{obj.referenceCount}"
 
+    def render_graph(self):
+        result = 'digraph G {\n'
+
+        for obj in self.objects:
+            result += obj.render_graph()
+
+        result += '}\n'
+
+        return result
+
     def allocate(self, obj):
         self.objects.append(obj)
         logging.debug('allocating %s', self.p(self.objectIndex))
