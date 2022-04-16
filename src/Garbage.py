@@ -31,7 +31,8 @@ class GarbageCollector:
 
     def p(self, idx):
         obj = self.objects[idx]
-        return f"<object idx='{idx}' type='{type(obj)}' references='{obj.referenceCount}'>"
+        #return f"<object idx='{idx}' type='{type(obj).__name__}' references='{obj.referenceCount}'>"
+        return f"{type(obj).__name__[0:-6]}[{idx}]/{obj.referenceCount}"
 
     def allocate(self, obj):
         self.objects.append(obj)
@@ -55,4 +56,4 @@ class GarbageCollector:
             logging.debug('++ %s', self.p(value.gcReference))
         if isinstance(value, Object):
             self.objects[value.idx].referenceCount += 1
-            logging.debug('++ %s', self.p(value.gcReference))
+            logging.debug('++ %s', self.p(value.idx))

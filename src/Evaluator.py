@@ -20,6 +20,7 @@ class Evaluator:
         self.globalScope.setVariable('print', BuiltinValue(printBuiltin))
 
     def cleanUp(self):
+        logging.debug('Execution ended')
         self.gc.subReference(self.globalScope)
 
     def error(self, errorMessage):
@@ -100,10 +101,11 @@ class Evaluator:
 
                 scope.setRegister(val)
 
-                if '__init__' in newscope.variables:
-                    constructor = newscope.variables['__init__']
+                if '__init__' in newscope.scope.variables:
+                    constructor = newscope.scope.variables['__init__']
                     arguments = [self.evalExpression(scope, x) for x in expression.parameters]
                     self.gc.getObject(constructor.gcReference).apply([val] + arguments)
+
                 return val
             elif isinstance(function, MethodValue):
                 classValue = function.classValue
@@ -154,7 +156,6 @@ class Evaluator:
                         self.evalStatement(insideScope, s)
                 finally:
                     self.gc.subReference(insideScope)
-                self.gc.subReference(insideScope)
         elif isinstance(statement, PrintStatement):
             self.evalExpression(scope, statement.expression).print()
         elif isinstance(statement, ReturnStatement):
@@ -168,11 +169,9 @@ class Evaluator:
         elif isinstance(statement, ClassStatement):
             insideScope = ScopeValue(self.gc, self.gc.allocate(ScopeObject(self.gc, scope)))
             self.gc.addReference(insideScope)
-
-            newscope = Scope(self.gc, scope)
             for stmt in statement.body:
-                self.evalStatement(newscope, stmt)
-            obj = ClassConstructorObject(self.gc, newscope)
+                self.evalStatement(insideScope, stmt)
+            obj = ClassConstructorObject(self.gc, insideScope)
             val = ClassConstructorValue(self.gc.allocate(obj))
             scope.setVariable(statement.identifier, val)
         else:

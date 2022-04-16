@@ -6,7 +6,7 @@ from Parser import Parser
 from Evaluator import Evaluator
 
 if __name__ == '__main__':
-    logging.basicConfig(stream=sys.stderr, level=logging.DEBUG)
+    logging.basicConfig(stream=sys.stderr, level=logging.INFO)
 
     lexer = Lexer(sys.stdin.read())
     lexer.tokenize()

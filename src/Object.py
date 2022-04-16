@@ -115,6 +115,7 @@ class ClassObject(Object):
     def __init__(self, gc, scope):
         super().__init__(gc)
         self.scope = scope
+        self.gc.addReference(self.scope)
 
     def delete(self):
         self.gc.subReference(self.scope)
@@ -135,13 +136,13 @@ class ScopeObject(Object):
     def setVariable(self, identifier, value):
         oldValue = self.getVariable(identifier)
 
-        if oldValue != None:
-            #print(f"Variable re-assignment: {identifier}")
-            self.gc.subReference(oldValue)
-
         # When a variable is set to an object then the object
         # shouldn't die while that variable is referencing it.
         self.gc.addReference(value)
+
+        if oldValue != None:
+            #print(f"Variable re-assignment: {identifier}")
+            self.gc.subReference(oldValue)
 
         scope = self
 
@@ -171,6 +172,7 @@ class ScopeObject(Object):
             parent = ScopeValue(self.gc, self.parent.idx)
 
         scope = ScopeValue(self.gc, self.gc.allocate(ScopeObject(self.gc, parent)))
+        self.gc.addReference(self.parent)
 
         for variableName, variableValue in self.variables.items():
             # When the scope is copied (which is probably for a lambda
