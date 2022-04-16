@@ -1,4 +1,4 @@
-import logging
+import logging, uuid, random, string
 
 from Value import *
 from ReturnException import ReturnException
@@ -176,7 +176,9 @@ class ScopeObject(Object):
             if isinstance(value, ReferenceValue):
                 result += f"{self.idx} -> {value.gcReference} [label=\"{identifier}\"];\n"
             else:
-                result += f"{self.idx} -> {type(value).__name__[0:-5]} [label=\"{identifier}\"];\n"
+                fakename = ''.join(random.choices(string.ascii_uppercase + string.ascii_lowercase, k=5))
+                result += f"{fakename} [label=\"{type(value).__name__[0:-5]}\"];\n"
+                result += f"{self.idx} -> {fakename} [label=\"{identifier}\"];\n"
         for idx, obj in enumerate(self.registers):
             if not isinstance(value, ReferenceValue): continue
             result += f"{self.idx} -> {obj.idx} [label=\"register[{idx}]\"];\n"

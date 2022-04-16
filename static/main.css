@@ -287,3 +287,17 @@ body {
         opacity: 0;
     }
 }
+
+.event-container {
+    width: 100%;
+}
+
+.event-container img {
+    width: 100%;
+    height: unset;
+}
+
+.gc-events-tab {
+    height: 100%;
+    overflow: scroll;
+}

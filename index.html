@@ -46,29 +46,13 @@
             <div class="tab help-button">Help</div>
           </div>
           <div class="tab-content-container">
-            <div class="console-output-tab" style="display: block" ></div>
-            <div class="gc-events-tab">bar</div>
-            <div class="help-tab">baz</div>
+            <div class="tab-content console-output-tab" style="display: block" ></div>
+            <div class="tab-content gc-events-tab"></div>
+            <div class="tab-content help-tab">baz</div>
           </div>
         </div>
       </div>
     </div>
-
-    <script>
-      var viz = new Viz();
-
-      viz.renderSVGElement('digraph { a -> b }')
-    .then(function(element) {
-        document.body.appendChild(element);
-    })
-    .catch(error => {
-        // Create a new Viz instance (@see Caveats page for more info)
-        viz = new Viz();
-
-        // Possibly display the error
-        console.error(error);
-    });
-    </script>
 
     <script type="text/python">
       from browser import document, window, html
@@ -78,6 +62,8 @@
       from Lexer import Lexer
       from Parser import Parser
       from Evaluator import Evaluator
+
+      Viz = window.Viz
 
       def handleCode(text):
           lexer = Lexer(text)
@@ -105,6 +91,15 @@
               container <= html.DIV(html.DIV(i + 1), Class="line-number")
               container <= html.DIV(line, Class="output-line")
 
+          eventsElement = document.select('.gc-events-tab')[0]
+          viz = Viz.new()
+
+          for i, event in enumerate(evaluator.events):
+              if event['type'] == 'graph':
+                  def DoThing(element):
+                     eventsElement <= html.DIV(element, Class="event-container")
+                  viz.renderImageElement(event['data']).then(DoThing)
+                  #eventsElement <= html.DIV(event['data'])
       window.handleCode = handleCode
     </script>
     <script>

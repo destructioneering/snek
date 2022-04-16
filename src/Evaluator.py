@@ -7,10 +7,13 @@ from Object import *
 from Garbage import GarbageCollector
 from ReturnException import ReturnException
 
-def printBuiltin(args):
+def printBuiltin(evaluator, args):
     for arg in args:
         arg.print()
     print()
+
+def graphBuiltin(evaluator, args):
+    evaluator.events.append({'type': 'graph', 'data': evaluator.gc.render_graph()})
 
 class Evaluator:
     def __init__(self):
@@ -18,6 +21,8 @@ class Evaluator:
         self.globalScope = ScopeValue(self.gc, self.gc.allocate(ScopeObject(self.gc, None)))
         self.gc.addReference(self.globalScope)
         self.globalScope.setVariable('print', BuiltinValue(printBuiltin))
+        self.globalScope.setVariable('graph', BuiltinValue(graphBuiltin))
+        self.events = []
 
     def cleanUp(self):
         logging.debug('Execution ended')
@@ -116,7 +121,7 @@ class Evaluator:
                 return self.gc.getObject(function.gcReference).apply(arguments)
             elif isinstance(function, BuiltinValue):
                 arguments = [self.evalExpression(scope, x) for x in expression.parameters]
-                return function.function(arguments)
+                return function.function(self, arguments)
             else:
                 print(f"error: {function}")
         elif isinstance(expression, LambdaExpression):
