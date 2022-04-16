@@ -23,11 +23,12 @@ def graphBuiltin(evaluator, args):
     evaluator.events.append({'type': 'graph', 'data': evaluator.gc.render_graph()})
 
 def traceBuiltin(evaluator, args):
-    evaluator.events.append({'type': 'graph', 'data': evaluator.gc.render_graph()})
+    evaluator.events.append({'type': 'trace', 'frames': []})
+    evaluator.gc.trace()
 
 class Evaluator:
     def __init__(self):
-        self.gc = GarbageCollector()
+        self.gc = GarbageCollector(self)
         self.globalScope = ScopeValue(self.gc, self.gc.allocate(ScopeObject(self.gc, None, None)))
         self.gc.addReference(self.globalScope)
         self.globalScope.setVariable('print', BuiltinValue(printBuiltin))

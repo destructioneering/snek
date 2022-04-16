@@ -3,38 +3,13 @@ import logging
 from Value import *
 from Object import *
 
-class ReferenceCounter:
-    # This should never be called on an object after the
-    # referenceCount has hit zero. That would mean that the object is
-    # still being referenced by some system that thinks it's alive
-    # after the object was marked dead. Very bad.
-    def subReference(self, gc, idx):
-        gc.objects[idx].referenceCount -= 1
-        logging.debug('-- %s', gc.p(idx))
-
-        if gc.objects[idx].referenceCount < 0:
-            # logging.debug('====================================', gc.objects[idx], gc.objects[idx].referenceCount)
-            abort()
-
-        if gc.objects[idx].referenceCount == 0:
-            logging.debug('object dying: %s', gc.p(idx))
-            gc.objects[idx].subReference()
-            gc.objects[idx] = None
-            # idx is now free to reassign.
-
-class Tracer:
-    def __init__(self):
-        pass
-
-    def trace(self, gc):
-        pass
-
 class GarbageCollector:
-    def __init__(self):
+    def __init__(self, evaluator):
         self.objects = []
         self.objectIndex = 0
-        self.referenceCounter = ReferenceCounter()
-        self.tracer = Tracer()
+
+        self.evaluator = evaluator
+
         self.hide_functions = True
         self.hide_scopes = True
 
@@ -42,6 +17,19 @@ class GarbageCollector:
         obj = self.objects[idx]
         #return f"<object idx='{idx}' type='{type(obj).__name__}' references='{obj.referenceCount}'>"
         return f"{type(obj).__name__[0:-6]}[{idx}]/{obj.referenceCount}"
+
+    def trace(self):
+        result = 'digraph {\n"" [shape=none];\n"" -> 0;0 [label="Global Scope"];\n'
+
+        for obj in self.objects:
+            if not obj: continue
+            if self.hide_functions and isinstance(obj, FunctionObject): continue
+            if self.hide_functions and isinstance(obj, LambdaObject): continue
+            result += obj.render_graph()
+
+        result += '}\n'
+
+        return result
 
     def render_graph(self):
         result = 'digraph {\n"" [shape=none];\n"" -> 0;0 [label="Global Scope"];\n'
@@ -66,11 +54,29 @@ class GarbageCollector:
     def getObject(self, idx):
         return self.objects[idx]
 
-    def subReference(self, value, varname="no variable"):
+    # This should never be called on an object after the
+    # referenceCount has hit zero. That would mean that the object is
+    # still being referenced by some system that thinks it's alive
+    # after the object was marked dead. Very bad.
+    def subReference2(self, gc, idx):
+        gc.objects[idx].referenceCount -= 1
+        logging.debug('-- %s', gc.p(idx))
+
+        if gc.objects[idx].referenceCount < 0:
+            # logging.debug('====================================', gc.objects[idx], gc.objects[idx].referenceCount)
+            abort()
+
+        if gc.objects[idx].referenceCount == 0:
+            logging.debug('object dying: %s', gc.p(idx))
+            gc.objects[idx].subReference()
+            gc.objects[idx] = None
+            # idx is now free to reassign.
+
+    def subReference(self, value):
         if isinstance(value, ReferenceValue):
-            self.referenceCounter.subReference(self, value.gcReference)
+            self.subReference2(self, value.gcReference)
         if isinstance(value, Object):
-            self.referenceCounter.subReference(self, value.idx)
+            self.subReference2(self, value.idx)
 
     def addReference(self, value):
         if isinstance(value, ReferenceValue):
