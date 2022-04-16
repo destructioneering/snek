@@ -81,9 +81,12 @@
 
           sys.stdout = old_stdout
           output = mystdout.getvalue()
+
           outputElement = document.select('.console-output-tab')[0]
+          eventsElement = document.select('.gc-events-tab')[0]
 
           outputElement.clear()
+          eventsElement.clear()
 
           for i, line in enumerate(output.splitlines()):
               container = html.DIV('', Class="output-line-container")
@@ -91,7 +94,6 @@
               container <= html.DIV(html.DIV(i + 1), Class="line-number")
               container <= html.DIV(line, Class="output-line")
 
-          eventsElement = document.select('.gc-events-tab')[0]
           viz = Viz.new()
 
           for i, event in enumerate(evaluator.events):
