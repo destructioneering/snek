@@ -22,6 +22,7 @@ if __name__ == '__main__':
     logging.info('The following objects remain:')
 
     for idx, obj in enumerate(evaluator.gc.objects):
+        if not obj: continue
         if obj.referenceCount < 1: continue
         logging.info(evaluator.gc.p(idx))
 

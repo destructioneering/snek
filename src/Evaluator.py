@@ -12,7 +12,14 @@ def printBuiltin(evaluator, args):
         arg.print()
     print()
 
+def graphSimpleBuiltin(evaluator, args):
+    evaluator.gc.hide_scopes = True
+    evaluator.gc.hide_functions = True
+    evaluator.events.append({'type': 'graph', 'data': evaluator.gc.render_graph()})
+
 def graphBuiltin(evaluator, args):
+    evaluator.gc.hide_scopes = False
+    evaluator.gc.hide_functions = False
     evaluator.events.append({'type': 'graph', 'data': evaluator.gc.render_graph()})
 
 def traceBuiltin(evaluator, args):
@@ -21,10 +28,11 @@ def traceBuiltin(evaluator, args):
 class Evaluator:
     def __init__(self):
         self.gc = GarbageCollector()
-        self.globalScope = ScopeValue(self.gc, self.gc.allocate(ScopeObject(self.gc, None)))
+        self.globalScope = ScopeValue(self.gc, self.gc.allocate(ScopeObject(self.gc, None, None)))
         self.gc.addReference(self.globalScope)
         self.globalScope.setVariable('print', BuiltinValue(printBuiltin))
         self.globalScope.setVariable('graph', BuiltinValue(graphBuiltin))
+        self.globalScope.setVariable('g', BuiltinValue(graphSimpleBuiltin))
         self.globalScope.setVariable('trace', BuiltinValue(traceBuiltin))
         self.events = []
 
@@ -104,8 +112,8 @@ class Evaluator:
             function = self.evalExpression(scope, expression.left)
             if isinstance(function, ClassConstructorValue):
                 newscope = self.gc.getObject(function.gcReference).scope.copy()
-
                 obj = ClassObject(self.gc, newscope)
+                newscope.scope.owner = obj
                 val = ClassValue(self.gc, self.gc.allocate(obj))
 
                 scope.setRegister(val)
@@ -141,7 +149,7 @@ class Evaluator:
     def evalStatement(self, scope, statement):
         logging.debug('Evaluating statement %s', statement)
         if isinstance(statement, IfStatement):
-            insideScope = ScopeValue(self.gc, self.gc.allocate(ScopeObject(self.gc, scope)))
+            insideScope = ScopeValue(self.gc, self.gc.allocate(ScopeObject(self.gc, scope, scope.scope.owner)))
             self.gc.addReference(insideScope)
 
             try:
@@ -158,7 +166,7 @@ class Evaluator:
                 self.gc.subReference(insideScope)
         elif isinstance(statement, WhileStatement):
             while self.evalExpression(scope, statement.condition).boolean == True:
-                insideScope = ScopeValue(self.gc, self.gc.allocate(ScopeObject(self.gc, scope)))
+                insideScope = ScopeValue(self.gc, self.gc.allocate(ScopeObject(self.gc, scope, scope.scope.owner)))
                 self.gc.addReference(insideScope)
                 try:
                     for s in statement.body:

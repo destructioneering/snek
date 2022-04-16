@@ -18,10 +18,9 @@ class ReferenceCounter:
 
         if gc.objects[idx].referenceCount == 0:
             logging.debug('object dying: %s', gc.p(idx))
-            gc.objects[idx].delete()
-            #gc.objects[idx] = None
+            gc.objects[idx].subReference()
+            gc.objects[idx] = None
             # idx is now free to reassign.
-            pass
 
 class Tracer:
     def __init__(self):
@@ -36,6 +35,8 @@ class GarbageCollector:
         self.objectIndex = 0
         self.referenceCounter = ReferenceCounter()
         self.tracer = Tracer()
+        self.hide_functions = True
+        self.hide_scopes = True
 
     def p(self, idx):
         obj = self.objects[idx]
@@ -43,12 +44,15 @@ class GarbageCollector:
         return f"{type(obj).__name__[0:-6]}[{idx}]/{obj.referenceCount}"
 
     def render_graph(self):
-        result = 'digraph {\n"" [shape=none];\n"" -> 0;\n'
-        result += self.objects[0].render_graph(0)
-        result += '}\n'
+        result = 'digraph {\n"" [shape=none];\n"" -> 0;0 [label="Global Scope"];\n'
 
         for obj in self.objects:
-            obj.visited = False
+            if not obj: continue
+            if self.hide_functions and isinstance(obj, FunctionObject): continue
+            if self.hide_functions and isinstance(obj, LambdaObject): continue
+            result += obj.render_graph()
+
+        result += '}\n'
 
         return result
 

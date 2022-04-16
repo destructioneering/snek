@@ -6,7 +6,6 @@ from ReturnException import ReturnException
 class Object:
     def __init__(self, gc):
         self.gc = gc
-        self.visited = False
 
         # Reference counter
         self.referenceCount = 0
@@ -16,13 +15,11 @@ class Object:
 
     def render_graph(self):
         if not self.alive(): return ''
-        self.visited = True
-        color = ['pink', 'purple', 'black'][self.color]
+        color = ['white', 'pink', 'purple'][self.color]
         result = f"{self.idx} [label=\"{type(self).__name__[0:-6]}[{self.idx}]\\nreferences: {self.referenceCount}\", fillcolor={color}, style=filled];\n"
         return result
 
     def alive(self):
-        if self.visited: return False
         return self.referenceCount > 0
 
 class FunctionObject(Object):
@@ -31,7 +28,7 @@ class FunctionObject(Object):
         # Can't copy the scope because variables assigned to the
         # enclosing in the future wouldn't be accessible inside the
         # function.
-        self.scope = ScopeValue(gc, gc.allocate(ScopeObject(gc, scope)))
+        self.scope = ScopeValue(gc, gc.allocate(ScopeObject(gc, scope, self)))
         self.gc.addReference(self.scope)
         self.parameters = parameters
         self.body = body
@@ -40,12 +37,10 @@ class FunctionObject(Object):
     def render_graph(self):
         if not self.alive(): return ''
         result = super().render_graph()
-        #if self.scope.scope.alive(): result += f"{self.idx} -> {self.scope.scope.idx} [label=\"<SCOPE>\"];\n"
-        if self.scope.scope.alive():
-            result += self.scope.scope.render_graph(self.idx)
+        if not self.gc.hide_scopes and self.scope.scope.alive(): result += f"{self.idx} -> {self.scope.scope.idx} [label=\"<SCOPE>\"];\n"
         return result
 
-    def delete(self):
+    def subReference(self):
         # We don't need to delete the scope because the scope wasn't
         # copied. This function will only live until its outer scope
         # dies unless there are other references to it... Actually, I
@@ -70,7 +65,7 @@ class FunctionObject(Object):
         if len(self.parameters) != len(arguments):
             print('Incorrect number of arguments supplied to function')
 
-        newscope = ScopeValue(self.gc, self.gc.allocate(ScopeObject(self.gc, self.scope)))
+        newscope = ScopeValue(self.gc, self.gc.allocate(ScopeObject(self.gc, self.scope, self)))
         self.gc.addReference(newscope)
 
         for i in range(len(arguments)):
@@ -97,7 +92,7 @@ class LambdaObject(Object):
         # Can't copy the scope because variables assigned to the
         # enclosing in the future wouldn't be accessible inside the
         # function.
-        self.scope = ScopeValue(gc, gc.allocate(ScopeObject(gc, scope)))
+        self.scope = ScopeValue(gc, gc.allocate(ScopeObject(gc, scope, self)))
         self.gc.addReference(self.scope)
         self.parameters = parameters
         self.body = body
@@ -106,11 +101,10 @@ class LambdaObject(Object):
     def render_graph(self):
         if not self.alive(): return ''
         result = super().render_graph()
-        if self.scope.scope.alive():
-            result += self.scope.scope.render_graph(self.idx)
+        if not self.gc.hide_scopes and self.scope.scope.alive(): result += f"{self.idx} -> {self.scope.scope.idx} [label=\"<SCOPE>\"];\n"
         return result
 
-    def delete(self):
+    def subReference(self):
         self.gc.subReference(self.scope)
 
     # def apply(self, arguments):
@@ -124,7 +118,7 @@ class LambdaObject(Object):
         if len(self.parameters) != len(arguments):
             print('Incorrect number of arguments supplied to function')
 
-        newscope = ScopeValue(self.gc, self.gc.allocate(ScopeObject(self.gc, self.scope)))
+        newscope = ScopeValue(self.gc, self.gc.allocate(ScopeObject(self.gc, self.scope, self)))
         self.gc.addReference(newscope)
 
         for i in range(len(arguments)):
@@ -137,17 +131,16 @@ class LambdaObject(Object):
 class ClassConstructorObject(Object):
     def __init__(self, gc, scope):
         super().__init__(gc)
-        self.scope = ScopeValue(gc, gc.allocate(ScopeObject(gc, scope)))
+        self.scope = ScopeValue(gc, gc.allocate(ScopeObject(gc, scope, self)))
         self.gc.addReference(self.scope)
 
     def render_graph(self):
         if not self.alive(): return ''
         result = super().render_graph()
-        if self.scope.scope.alive():
-            result += self.scope.scope.render_graph(self.idx)
+        if not self.gc.hide_scopes and self.scope.scope.alive(): result += f"{self.idx} -> {self.scope.scope.idx} [label=\"<SCOPE>\"];\n"
         return result
 
-    def delete(self):
+    def subReference(self):
         self.gc.subReference(self.scope)
 
 class ClassObject(Object):
@@ -159,18 +152,18 @@ class ClassObject(Object):
     def render_graph(self):
         if not self.alive(): return ''
         result = super().render_graph()
-        if self.scope.scope.alive():
-            result += self.scope.scope.render_graph(self.idx)
+        if not self.gc.hide_scopes and self.scope.scope.alive(): result += f"{self.idx} -> {self.scope.scope.idx} [label=\"<SCOPE>\"];\n"
         return result
 
-    def delete(self):
+    def subReference(self):
         self.gc.subReference(self.scope)
 
 class ScopeObject(Object):
-    def __init__(self, gc, parent):
+    def __init__(self, gc, parent, owner):
         # Parent should be a ScopeValue.
         super().__init__(gc)
         self.parent = None
+        self.owner = owner
         if isinstance(parent, Object):
             abort()
         if parent:
@@ -179,22 +172,31 @@ class ScopeObject(Object):
         self.variables = {}
         self.registers = []
 
-    def render_graph(self, host):
+    def render_graph(self):
         if not self.alive(): return ''
 
         result = ''
+        host = self.idx
 
-        #result += super().render_graph()
-        #result += f"{host} -> {self.idx};"
-        #host = self.idx
-        # if self.parent:
-        #     result += f"{host} -> {self.parent.idx};\n"
+        if self.gc.hide_scopes and self.owner:
+            host = self.owner.idx
+        else:
+            result += super().render_graph()
+
+        if self.gc.hide_functions and isinstance(self.owner, FunctionObject): return ''
+        if self.gc.hide_functions and isinstance(self.owner, LambdaObject): return ''
+
+        if self.parent:
+            if self.gc.hide_scopes and self.parent.owner:
+                result += f"{host} -> {self.parent.owner.idx} [label=\"PARENT\"];"
+            elif not self.gc.hide_scopes:
+                result += f"{host} -> {self.parent.idx} [label=\"PARENT\"];"
 
         for identifier, value in self.variables.items():
-            if identifier == '__init__': continue
+            if self.gc.hide_functions and isinstance(value, FunctionValue): continue
+            if self.gc.hide_functions and isinstance(value, LambdaValue): continue
             if isinstance(value, ReferenceValue):
                 result += f"{host} -> {value.gcReference} [label=\"{identifier}\"];\n"
-                result += self.gc.getObject(value.gcReference).render_graph()
             elif not isinstance(value, BuiltinValue):
                 fakename = ''.join(random.choices(string.ascii_uppercase + string.ascii_lowercase, k=5))
                 result += f"{fakename} [label=\"{value.render_graph()}\"];\n"
@@ -244,7 +246,7 @@ class ScopeObject(Object):
         if self.parent:
             parent = ScopeValue(self.gc, self.parent.idx)
 
-        scope = ScopeValue(self.gc, self.gc.allocate(ScopeObject(self.gc, parent)))
+        scope = ScopeValue(self.gc, self.gc.allocate(ScopeObject(self.gc, parent, parent.scope.owner)))
 
         for variableName, variableValue in self.variables.items():
             # When the scope is copied (which is probably for a lambda
@@ -260,7 +262,7 @@ class ScopeObject(Object):
 
         return scope
 
-    def delete(self):
+    def subReference(self):
         self.clearRegisters()
         self.gc.subReference(self.parent)
         for variableName, variableValue in self.variables.items():
