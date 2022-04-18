@@ -224,6 +224,9 @@ class ScopeObject(Object):
         else:
             self.gc.new_frame()
 
+        if self.parent:
+            self.parent.trace()
+
         for identifier, value in self.variables.items():
             if isinstance(value, ReferenceValue):
                 self.gc.getObject(value.gcReference).trace()
@@ -242,7 +245,7 @@ class ScopeObject(Object):
         if self.gc.hide_functions and isinstance(self.owner, FunctionObject): return ''
         if self.gc.hide_functions and isinstance(self.owner, LambdaObject): return ''
 
-        if not self.gc.hide_parents:
+        if not self.gc.hide_parents and self.parent:
             if self.gc.hide_scopes:
                 if self.parent.owner:
                     result += f"{host} -> {self.parent.owner.idx};"

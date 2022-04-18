@@ -12,7 +12,7 @@ class GarbageCollector:
 
         self.hide_functions = True
         self.hide_scopes = True
-        self.hide_parents = True
+        self.hide_parents = False
         self.hide_dead = False
 
     def p(self, idx):
