@@ -128,14 +128,14 @@
                   itemContainer.bind('click', window.handleEventItemClicked)
                   eventsElement <= itemContainer
 
-                  def callback(ID):
+                  def callback(ID, rest):
                       def DoInside(element):
                           document.select(ID)[0] <= html.DIV(element, Class="event-container")
+                          if len(rest) > 0:
+                              viz.renderImageElement(rest[0]).then(callback(f'#{itemContainerID}', rest[1:]))
                       return DoInside
 
-                  for frame in event['frames']:
-                      console.log(frame)
-                      viz.renderImageElement(frame).then(callback(f'#{itemContainerID}'))
+                  viz.renderImageElement(event['frames'][0]).then(callback(f'#{itemContainerID}', event['frames'][1:]))
 
       window.handleCode = handleCode
     </script>
