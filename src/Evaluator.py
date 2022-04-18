@@ -27,22 +27,26 @@ def showParentsBuiltin(evaluator, scope, args):
 def graphSimpleBuiltin(evaluator, scope, args):
     evaluator.gc.hide_scopes = True
     evaluator.gc.hide_functions = True
+    evaluator.gc.hide_parents = True
     evaluator.events.append({'type': 'graph', 'data': evaluator.gc.render_graph()})
 
 def graphBuiltin(evaluator, scope, args):
     evaluator.gc.hide_scopes = False
     evaluator.gc.hide_functions = False
+    evaluator.gc.hide_parents = False
     evaluator.events.append({'type': 'graph', 'data': evaluator.gc.render_graph()})
 
 def traceBuiltin(evaluator, scope, args):
     evaluator.gc.hide_scopes = False
     evaluator.gc.hide_functions = False
+    evaluator.gc.hide_parents = False
     evaluator.events.append({'type': 'trace', 'frames': ['']})
     evaluator.gc.trace(scope)
 
 def traceSimpleBuiltin(evaluator, scope, args):
     evaluator.gc.hide_scopes = True
     evaluator.gc.hide_functions = True
+    evaluator.gc.hide_parents = True
     evaluator.events.append({'type': 'trace', 'frames': ['']})
     evaluator.gc.trace(scope)
 
