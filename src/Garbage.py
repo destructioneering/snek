@@ -13,6 +13,7 @@ class GarbageCollector:
         self.hide_functions = True
         self.hide_scopes = True
         self.hide_parents = True
+        self.hide_dead = False
 
     def p(self, idx):
         obj = self.objects[idx]
@@ -45,7 +46,7 @@ class GarbageCollector:
         for obj in self.objects:
             if self.hide_functions and isinstance(obj, FunctionObject): continue
             if self.hide_scopes and isinstance(obj, ScopeObject): continue
-            if obj.color != 2:
+            if obj.color != 2 and not (self.hide_dead and obj.referenceCount < 1):
                 dead += f'{obj.idx} [fillcolor=red];\n'
 
         result.append(header + sofar + dead + '}\n')

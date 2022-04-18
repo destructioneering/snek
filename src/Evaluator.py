@@ -12,6 +12,9 @@ def printBuiltin(evaluator, scope, args):
         arg.print()
     print()
 
+def hideDeadObjectsBuiltin(evaluator, scope, args):
+    evaluator.gc.hide_dead = True
+
 def graphSimpleBuiltin(evaluator, scope, args):
     evaluator.gc.hide_scopes = True
     evaluator.gc.hide_functions = True
@@ -44,6 +47,7 @@ class Evaluator:
         self.globalScope.setVariable('g', BuiltinValue(graphSimpleBuiltin))
         self.globalScope.setVariable('trace', BuiltinValue(traceBuiltin))
         self.globalScope.setVariable('t', BuiltinValue(traceSimpleBuiltin))
+        self.globalScope.setVariable('hide_dead', BuiltinValue(hideDeadObjectsBuiltin))
         self.events = []
 
     def cleanUp(self):

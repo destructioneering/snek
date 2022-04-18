@@ -36,8 +36,7 @@ class Object:
         return result
 
     def alive(self):
-        return True
-        return self.referenceCount > 0
+        return (not self.gc.hide_dead) or self.referenceCount > 0
 
 class FunctionObject(Object):
     def __init__(self, gc, scope, parameters, body, evaluator):
@@ -244,13 +243,13 @@ class ScopeObject(Object):
         if self.gc.hide_functions and isinstance(self.owner, LambdaObject): return ''
 
         if not self.gc.hide_parents:
-            if not self.gc.hide_scopes:
-                result += f"{host} -> {self.parent.idx};"
-            else:
+            if self.gc.hide_scopes:
                 if self.parent.owner:
                     result += f"{host} -> {self.parent.owner.idx};"
                 elif self.parent.idx == 0:
                     result += f"{host} -> {self.parent.idx};"
+            else:
+                result += f"{host} -> {self.parent.idx};"
 
         for identifier, value in self.variables.items():
             if self.gc.hide_functions and isinstance(value, FunctionValue): continue
