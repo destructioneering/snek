@@ -13,13 +13,30 @@ class Object:
         # Tracer
         self.color = 0
 
+        self.colors = ['white', 'pink', 'purple']
+
+    def markvisited(self):
+        if self.color > 1: return
+        self.color = 1
+        if self.gc.hide_functions and isinstance(self, FunctionObject): return
+        if self.gc.hide_scopes and self.idx != 0 and isinstance(self, ScopeObject): return
+        color = self.colors[self.color]
+        self.gc.evaluator.events[-1]['frames'][-1] += f"{self.idx} [fillcolor={color}];\n";
+
+    def markalive(self):
+        self.color = 2
+        if self.gc.hide_functions and isinstance(self, FunctionObject): return
+        if self.gc.hide_scopes and self.idx != 0 and isinstance(self, ScopeObject): return
+        color = self.colors[self.color]
+        self.gc.evaluator.events[-1]['frames'][-1] += f"{self.idx} [fillcolor={color}];\n";
+
     def render_graph(self):
         if not self.alive(): return ''
-        color = ['white', 'pink', 'purple'][self.color]
-        result = f"{self.idx} [label=\"{type(self).__name__[0:-6]}[{self.idx}]\\nreferences: {self.referenceCount}\", fillcolor={color}, style=filled];\n"
+        result = f"{self.idx} [label=\"{type(self).__name__[0:-6]}[{self.idx}]\\nreferences: {self.referenceCount}\", style=filled];\n"
         return result
 
     def alive(self):
+        return True
         return self.referenceCount > 0
 
 class FunctionObject(Object):
@@ -39,6 +56,11 @@ class FunctionObject(Object):
         result = super().render_graph()
         if not self.gc.hide_scopes and self.scope.scope.alive(): result += f"{self.idx} -> {self.scope.scope.idx} [label=\"<SCOPE>\"];\n"
         return result
+
+    def trace(self):
+        if self.color > 1: return
+        self.markalive()
+        self.scope.scope.trace()
 
     def subReference(self):
         # We don't need to delete the scope because the scope wasn't
@@ -104,6 +126,11 @@ class LambdaObject(Object):
         if not self.gc.hide_scopes and self.scope.scope.alive(): result += f"{self.idx} -> {self.scope.scope.idx} [label=\"<SCOPE>\"];\n"
         return result
 
+    def trace(self):
+        if self.color > 1: return
+        self.markalive()
+        self.scope.scope.trace()
+
     def subReference(self):
         self.gc.subReference(self.scope)
 
@@ -140,6 +167,11 @@ class ClassConstructorObject(Object):
         if not self.gc.hide_scopes and self.scope.scope.alive(): result += f"{self.idx} -> {self.scope.scope.idx} [label=\"<SCOPE>\"];\n"
         return result
 
+    def trace(self):
+        if self.color > 1: return
+        self.markalive()
+        self.scope.scope.trace()
+
     def subReference(self):
         self.gc.subReference(self.scope)
 
@@ -154,6 +186,11 @@ class ClassObject(Object):
         result = super().render_graph()
         if not self.gc.hide_scopes and self.scope.scope.alive(): result += f"{self.idx} -> {self.scope.scope.idx} [label=\"<SCOPE>\"];\n"
         return result
+
+    def trace(self):
+        if self.color > 1: return
+        self.markalive()
+        self.scope.scope.trace()
 
     def subReference(self):
         self.gc.subReference(self.scope)
@@ -172,6 +209,26 @@ class ScopeObject(Object):
         self.variables = {}
         self.registers = []
 
+    def trace(self):
+        if self.color > 1: return
+        self.markalive()
+
+        for identifier, value in self.variables.items():
+            if isinstance(value, ReferenceValue):
+                self.gc.getObject(value.gcReference).markvisited()
+
+        if self.owner:
+            if self.gc.hide_functions and isinstance(self.owner, FunctionObject):
+                pass
+            else:
+                self.gc.new_frame()
+        else:
+            self.gc.new_frame()
+
+        for identifier, value in self.variables.items():
+            if isinstance(value, ReferenceValue):
+                self.gc.getObject(value.gcReference).trace()
+
     def render_graph(self):
         if not self.alive(): return ''
 
@@ -180,17 +237,20 @@ class ScopeObject(Object):
 
         if self.gc.hide_scopes and self.owner:
             host = self.owner.idx
-        else:
+        elif not self.gc.hide_scopes:
             result += super().render_graph()
 
         if self.gc.hide_functions and isinstance(self.owner, FunctionObject): return ''
         if self.gc.hide_functions and isinstance(self.owner, LambdaObject): return ''
 
-        if self.parent:
-            if self.gc.hide_scopes and self.parent.owner:
-                result += f"{host} -> {self.parent.owner.idx} [label=\"PARENT\"];"
-            elif not self.gc.hide_scopes:
-                result += f"{host} -> {self.parent.idx} [label=\"PARENT\"];"
+        if not self.gc.hide_parents:
+            if not self.gc.hide_scopes:
+                result += f"{host} -> {self.parent.idx};"
+            else:
+                if self.parent.owner:
+                    result += f"{host} -> {self.parent.owner.idx};"
+                elif self.parent.idx == 0:
+                    result += f"{host} -> {self.parent.idx};"
 
         for identifier, value in self.variables.items():
             if self.gc.hide_functions and isinstance(value, FunctionValue): continue
@@ -202,9 +262,9 @@ class ScopeObject(Object):
                 result += f"{fakename} [label=\"{value.render_graph()}\"];\n"
                 result += f"{host} -> {fakename} [label=\"{identifier}\"];\n"
 
-        for idx, obj in enumerate(self.registers):
-            if not isinstance(value, ReferenceValue): continue
-            result += f"{host} -> {obj.idx} [label=\"register[{idx}]\"];\n"
+        # for idx, obj in enumerate(self.registers):
+        #     if not isinstance(value, ReferenceValue): continue
+        #     result += f"{host} -> {obj.idx} [label=\"register[{idx}]\"];\n"
 
         return result
 

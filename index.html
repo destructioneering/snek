@@ -73,7 +73,7 @@
     </script>
 
     <script type="text/python">
-      from browser import document, window, html
+      from browser import document, window, html, console
       from io import StringIO
       import sys
 
@@ -115,18 +115,34 @@
           viz = Viz.new()
 
           for i, event in enumerate(evaluator.events):
-              label = html.DIV('{}. Graph'.format(i + 1))
-              itemContainer = html.DIV(label, Class="event-item-container", Id='event-{}'.format(i + 1))
-              itemContainer.bind('click', window.handleEventItemClicked)
-              eventsElement <= itemContainer
-
-              def DoThing(i):
-                  def DoInside(element):
-                      document.select('#event-{}'.format(i + 1))[0] <= html.DIV(element, Class="event-container")
-                  return DoInside
-
               if event['type'] == 'graph':
-                  viz.renderImageElement(event['data']).then(DoThing(i))
+                  itemContainerID = 'event-{}'.format(i + 1)
+                  label = html.DIV('{}. Graph'.format(i + 1))
+                  itemContainer = html.DIV(label, Class="event-item-container", Id=itemContainerID)
+                  itemContainer.bind('click', window.handleEventItemClicked)
+                  eventsElement <= itemContainer
+
+                  def callback(ID):
+                      def DoInside(element):
+                          document.select(ID)[0] <= html.DIV(element, Class="event-container")
+                      return DoInside
+
+                  viz.renderImageElement(event['data']).then(callback(f'#{itemContainerID}'))
+              if event['type'] == 'trace':
+                  itemContainerID = 'event-{}'.format(i + 1)
+                  label = html.DIV('{}. Trace'.format(i + 1))
+                  itemContainer = html.DIV(label, Class="event-item-container", Id=itemContainerID)
+                  itemContainer.bind('click', window.handleEventItemClicked)
+                  eventsElement <= itemContainer
+
+                  def callback(ID):
+                      def DoInside(element):
+                          document.select(ID)[0] <= html.DIV(element, Class="event-container")
+                      return DoInside
+
+                  for frame in event['frames']:
+                      console.log(frame)
+                      viz.renderImageElement(frame).then(callback(f'#{itemContainerID}'))
 
       window.handleCode = handleCode
     </script>

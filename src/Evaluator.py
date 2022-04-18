@@ -7,24 +7,32 @@ from Object import *
 from Garbage import GarbageCollector
 from ReturnException import ReturnException
 
-def printBuiltin(evaluator, args):
+def printBuiltin(evaluator, scope, args):
     for arg in args:
         arg.print()
     print()
 
-def graphSimpleBuiltin(evaluator, args):
+def graphSimpleBuiltin(evaluator, scope, args):
     evaluator.gc.hide_scopes = True
     evaluator.gc.hide_functions = True
     evaluator.events.append({'type': 'graph', 'data': evaluator.gc.render_graph()})
 
-def graphBuiltin(evaluator, args):
+def graphBuiltin(evaluator, scope, args):
     evaluator.gc.hide_scopes = False
     evaluator.gc.hide_functions = False
     evaluator.events.append({'type': 'graph', 'data': evaluator.gc.render_graph()})
 
-def traceBuiltin(evaluator, args):
-    evaluator.events.append({'type': 'trace', 'frames': []})
-    evaluator.gc.trace()
+def traceBuiltin(evaluator, scope, args):
+    evaluator.gc.hide_scopes = False
+    evaluator.gc.hide_functions = False
+    evaluator.events.append({'type': 'trace', 'frames': ['']})
+    evaluator.gc.trace(scope)
+
+def traceSimpleBuiltin(evaluator, scope, args):
+    evaluator.gc.hide_scopes = True
+    evaluator.gc.hide_functions = True
+    evaluator.events.append({'type': 'trace', 'frames': ['']})
+    evaluator.gc.trace(scope)
 
 class Evaluator:
     def __init__(self):
@@ -35,6 +43,7 @@ class Evaluator:
         self.globalScope.setVariable('graph', BuiltinValue(graphBuiltin))
         self.globalScope.setVariable('g', BuiltinValue(graphSimpleBuiltin))
         self.globalScope.setVariable('trace', BuiltinValue(traceBuiltin))
+        self.globalScope.setVariable('t', BuiltinValue(traceSimpleBuiltin))
         self.events = []
 
     def cleanUp(self):
@@ -134,7 +143,7 @@ class Evaluator:
                 return self.gc.getObject(function.gcReference).apply(arguments)
             elif isinstance(function, BuiltinValue):
                 arguments = [self.evalExpression(scope, x) for x in expression.parameters]
-                return function.function(self, arguments)
+                return function.function(self, scope, arguments)
             else:
                 print(f"error: {function}")
         elif isinstance(expression, LambdaExpression):
