@@ -64,8 +64,21 @@ class ExpressionParser:
                 return operator
         return None
 
-    def parseFunctionParameters(self):
+    def parseFunctionCallParameters(self):
         if self.token().punct() == ')': return []
+        parameters = [self.parse()]
+
+        while True:
+            if self.token().punct() == ',':
+                self.nextToken()
+                parameters.append(self.parse())
+            else:
+                break
+
+        return parameters
+
+    def parseLambdaParameters(self):
+        if self.token().punct() == ':': return []
         parameters = [self.parse()]
 
         while True:
@@ -102,7 +115,7 @@ class ExpressionParser:
                     self.nextToken()
                 elif self.token().ident() == 'lambda':
                     self.nextToken()
-                    parameters = [x.identifier for x in self.parseFunctionParameters()]
+                    parameters = [x.identifier for x in self.parseLambdaParameters()]
                     self.expect(self.token().punct() == ':', 'Expected a `:`')
                     self.nextToken()
                     body = self.parse()
@@ -141,7 +154,7 @@ class ExpressionParser:
             elif operator[4] == 'member':
                 self.nextToken()
                 if operator[0] == '(': # Function call
-                    parameters = self.parseFunctionParameters()
+                    parameters = self.parseFunctionCallParameters()
                     if self.token().punct() != operator[1]:
                         print(f"Expression error: expected a {operator[1]} (got {self.token().punct()})")
                     self.nextToken()
