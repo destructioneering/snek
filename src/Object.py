@@ -243,7 +243,6 @@ class ScopeObject(Object):
             result += super().render_graph()
 
         if self.gc.hide_functions and isinstance(self.owner, FunctionObject): return ''
-        if self.gc.hide_functions and isinstance(self.owner, LambdaObject): return ''
 
         if not self.gc.hide_parents and self.parent:
             if self.gc.hide_scopes:
@@ -256,7 +255,6 @@ class ScopeObject(Object):
 
         for identifier, value in self.variables.items():
             if self.gc.hide_functions and isinstance(value, FunctionValue): continue
-            if self.gc.hide_functions and isinstance(value, LambdaValue): continue
             if isinstance(value, ReferenceValue):
                 result += f"{host} -> {value.gcReference} [label=\"{identifier}\"];\n"
             elif not isinstance(value, BuiltinValue):

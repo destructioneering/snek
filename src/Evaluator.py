@@ -12,6 +12,12 @@ def printBuiltin(evaluator, scope, args):
         arg.print()
     print()
 
+def hideFunctionsBuiltin(evaluator, scope, args):
+    evaluator.gc.hide_functions = True
+
+def showFunctionsBuiltin(evaluator, scope, args):
+    evaluator.gc.hide_functions = False
+
 def hideDeadObjectsBuiltin(evaluator, scope, args):
     evaluator.gc.hide_dead = True
 
@@ -26,7 +32,6 @@ def showParentsBuiltin(evaluator, scope, args):
 
 def graphSimpleBuiltin(evaluator, scope, args):
     evaluator.gc.hide_scopes = True
-    evaluator.gc.hide_functions = True
     evaluator.gc.hide_parents = True
     evaluator.events.append({'type': 'graph', 'data': evaluator.gc.render_graph()})
 
@@ -45,7 +50,6 @@ def traceBuiltin(evaluator, scope, args):
 
 def traceSimpleBuiltin(evaluator, scope, args):
     evaluator.gc.hide_scopes = True
-    evaluator.gc.hide_functions = True
     evaluator.gc.hide_parents = True
     evaluator.events.append({'type': 'trace', 'frames': ['']})
     evaluator.gc.trace(scope)
@@ -64,6 +68,8 @@ class Evaluator:
         self.globalScope.setVariable('show_dead', BuiltinValue(showDeadObjectsBuiltin))
         self.globalScope.setVariable('hide_parents', BuiltinValue(hideParentsBuiltin))
         self.globalScope.setVariable('show_parents', BuiltinValue(showParentsBuiltin))
+        self.globalScope.setVariable('hide_functions', BuiltinValue(hideFunctionsBuiltin))
+        self.globalScope.setVariable('show_functions', BuiltinValue(showFunctionsBuiltin))
         self.events = []
 
     def cleanUp(self):
