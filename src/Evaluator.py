@@ -39,14 +39,14 @@ def graphBuiltin(evaluator, scope, args):
     evaluator.gc.hide_scopes = False
     evaluator.gc.hide_functions = False
     evaluator.gc.hide_parents = False
-    evaluator.gc.hide_dead = False
+    # evaluator.gc.hide_dead = False
     evaluator.events.append({'type': 'graph', 'data': evaluator.gc.render_graph()})
 
 def traceBuiltin(evaluator, scope, args):
     evaluator.gc.hide_scopes = False
     evaluator.gc.hide_functions = False
     evaluator.gc.hide_parents = False
-    evaluator.gc.hide_dead = False
+    # evaluator.gc.hide_dead = False
     evaluator.events.append({'type': 'trace', 'frames': ['']})
     evaluator.gc.trace(scope)
 
@@ -201,8 +201,8 @@ class Evaluator:
                     if isinstance(statement.otherwise, list):
                         for s in statement.otherwise:
                             self.evalStatement(insideScope, s)
-                        else:
-                            self.evalStatement(insideScope, statement.otherwise)
+                    else:
+                        self.evalStatement(insideScope, statement.otherwise)
             finally:
                 self.gc.subReference(insideScope)
         elif isinstance(statement, WhileStatement):
