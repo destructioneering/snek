@@ -1,0 +1,9 @@
+def f(n):
+    return lambda: n *= 2
+
+h = f(32)
+
+print(h())
+print(h())
+print(h())
+print(h())
