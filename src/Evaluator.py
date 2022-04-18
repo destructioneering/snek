@@ -39,12 +39,14 @@ def graphBuiltin(evaluator, scope, args):
     evaluator.gc.hide_scopes = False
     evaluator.gc.hide_functions = False
     evaluator.gc.hide_parents = False
+    evaluator.gc.hide_dead = False
     evaluator.events.append({'type': 'graph', 'data': evaluator.gc.render_graph()})
 
 def traceBuiltin(evaluator, scope, args):
     evaluator.gc.hide_scopes = False
     evaluator.gc.hide_functions = False
     evaluator.gc.hide_parents = False
+    evaluator.gc.hide_dead = False
     evaluator.events.append({'type': 'trace', 'frames': ['']})
     evaluator.gc.trace(scope)
 
@@ -166,7 +168,10 @@ class Evaluator:
                 return self.gc.getObject(function.gcReference).apply([classValue] + arguments)
             elif isinstance(function, FunctionValue) or isinstance(function, LambdaValue):
                 arguments = [self.evalExpression(scope, x) for x in expression.parameters]
-                return self.gc.getObject(function.gcReference).apply(arguments)
+                val = self.gc.getObject(function.gcReference).apply(arguments)
+                scope.setRegister(val)
+                self.gc.subReference(val)
+                return val
             elif isinstance(function, BuiltinValue):
                 arguments = [self.evalExpression(scope, x) for x in expression.parameters]
                 return function.function(self, scope, arguments)

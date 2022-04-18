@@ -100,7 +100,6 @@ class FunctionObject(Object):
                 return e.value
 
         self.gc.subReference(newscope)
-
         return NoneValue()
 
 # The only difference between this and FunctionObject is that a
@@ -152,6 +151,7 @@ class LambdaObject(Object):
 
         val = self.evaluator.evalExpression(newscope, self.body)
         self.gc.subReference(newscope)
+
         return val
 
 class ClassConstructorObject(Object):
@@ -262,9 +262,9 @@ class ScopeObject(Object):
                 result += f"{fakename} [label=\"{value.render_graph()}\"];\n"
                 result += f"{host} -> {fakename} [label=\"{identifier}\"];\n"
 
-        # for idx, obj in enumerate(self.registers):
+        # for idx, value in enumerate(self.registers):
         #     if not isinstance(value, ReferenceValue): continue
-        #     result += f"{host} -> {obj.idx} [label=\"register[{idx}]\"];\n"
+        #     result += f"{host} -> {value.gcReference} [label=\"register[{idx}]\"];\n"
 
         return result
 

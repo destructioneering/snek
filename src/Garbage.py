@@ -76,17 +76,15 @@ class GarbageCollector:
     def getObject(self, idx):
         return self.objects[idx]
 
-    # This should never be called on an object after the
-    # referenceCount has hit zero. That would mean that the object is
-    # still being referenced by some system that thinks it's alive
-    # after the object was marked dead. Very bad.
     def subReference2(self, gc, idx):
         gc.objects[idx].referenceCount -= 1
         logging.debug('-- %s', gc.p(idx))
 
         if gc.objects[idx].referenceCount < 0:
-            # logging.debug('====================================', gc.objects[idx], gc.objects[idx].referenceCount)
-            abort()
+            # Not necessarily a cause for panic; could be a circular data structure.
+            gc.objects[idx].referenceCount = 0
+            logging.debug('object died again [%s] (%s references)', gc.objects[idx], gc.objects[idx].referenceCount)
+            return
 
         if gc.objects[idx].referenceCount == 0:
             logging.debug('object dying: %s', gc.p(idx))

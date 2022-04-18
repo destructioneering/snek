@@ -8,3 +8,5 @@ def f():
     return lambda: a.data + b.data
 
 print(f()())
+
+graph()

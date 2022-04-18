@@ -8,3 +8,5 @@ node = Node(1, Node(2, Node(3, None)))
 while node != None:
     print(node.data)
     node = node.nn
+
+g()
