@@ -37,40 +37,28 @@
               <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-play"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
             </div>
           </div>
-          <div id="editor" class="editor">{% include "demo.snek" %}</div>
+          <div id="editor" class="editor">{% include "static/demo.snek" %}</div>
         </div>
         <div class="right-container">
           <div class="tab-container">
             <div class="tab console-button button-pressed">Console output</div>
             <div class="tab gc-button">GC events</div>
-            <div class="tab help-button">Help</div>
+            <div class="tab example-button">Examples</div>
           </div>
           <div class="tab-content-container">
             <div class="tab-content console-output-tab" style="display: block" ></div>
             <div class="tab-content gc-events-tab"></div>
-            <div class="tab-content help-tab">baz</div>
+            <div class="tab-content example-tab">
+              <div onclick="handleExampleClicked('/static/demo.snek')">Main demo</div>
+              <div onclick="handleExampleClicked('/static/ll.snek')">Linked list</div>
+              <div onclick="handleExampleClicked('/static/ll-dead.snek')">Linked list (missing head)</div>
+              <div onclick="handleExampleClicked('/static/lambda.snek')">Lambda</div>
+              <div onclick="handleExampleClicked('/static/circular.snek')">Circular</div>
+            </div>
           </div>
         </div>
       </div>
     </div>
-
-    <script>
-      function handleEventItemClicked(event) {
-          var element = $(event.target).closest('.event-item-container').find('.event-container');
-          var visible = element.is(':visible');
-          $('.event-container').hide();
-
-          console.log(visible);
-
-          if (visible) {
-              element.hide();
-          } else {
-              element.show();
-          }
-
-          console.log(event.target);
-      }
-    </script>
 
     <script type="text/python">
       from browser import document, window, html, console
@@ -146,10 +134,34 @@
 
       window.handleCode = handleCode
     </script>
+
     <script>
+      var editor = null;
+
+      function handleEventItemClicked(event) {
+          var element = $(event.target).closest('.event-item-container').find('.event-container');
+          var visible = element.is(':visible');
+          $('.event-container').hide();
+
+          if (visible) {
+              element.hide();
+          } else {
+              element.show();
+          }
+      }
+
+      function handleExampleClicked(path) {
+          console.log(path);
+          fetch(path).then(function(response) {
+              return response.text().then(function(text) {
+                  editor.setValue(text, -1);
+              });
+          });
+      }
+
       $(document).ready(function() {
           // Set up the editor.
-          var editor = ace.edit("editor", {
+          editor = ace.edit("editor", {
               wrap: true,
           });
           var PythonMode = ace.require("ace/mode/python").Mode;
@@ -166,7 +178,7 @@
           // Set up the tabs.
           $('.console-button').click(function() {
               $('.gc-events-tab').hide()
-              $('.help-tab').hide()
+              $('.example-tab').hide()
               $('.console-output-tab').show()
 
               $('.tab').removeClass('button-pressed');
@@ -176,7 +188,7 @@
 
           $('.gc-button').click(function() {
               $('.console-output-tab').hide()
-              $('.help-tab').hide()
+              $('.example-tab').hide()
               $('.gc-events-tab').show()
 
               $('.tab').removeClass('button-pressed');
@@ -184,10 +196,10 @@
               // $('.run-button').hide()
           });
 
-          $('.help-button').click(function() {
+          $('.example-button').click(function() {
               $('.gc-events-tab').hide()
               $('.console-output-tab').hide()
-              $('.help-tab').show()
+              $('.example-tab').show()
 
               $('.tab').removeClass('button-pressed');
               $(this).addClass('button-pressed');

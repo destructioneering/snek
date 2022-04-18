@@ -1,0 +1,9 @@
+class Node:
+    def __init__(self, data, nn):
+        self.data = data
+        self.nn = nn
+
+node = Node(1, Node(2, Node(3, None)))
+node.nn.nn.nn = node
+node = None
+g()

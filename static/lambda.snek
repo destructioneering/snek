@@ -1,0 +1,10 @@
+class Node:
+    def __init__(self, data):
+        self.data = data
+
+def f():
+    a = Node(1)
+    b = Node(2)
+    return lambda: a.data + b.data
+
+print(f()())
